@@ -1,0 +1,180 @@
+Fetching distribution.
+Downloading https://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+.............10%.............20%.............30%.............40%.............50%.............60%.............70%.............80%.............90%.............100%
+
+Welcome to Gradle 8.11.1!
+
+Here are the highlights of this release:
+ - Parallel load and store for Configuration Cache
+ - Java compilation errors at the end of the build output
+ - Consolidated report for warnings and deprecations
+
+For more details see https://docs.gradle.org/8.11.1/release-notes.html
+
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+> Configure project :
+Fabric Loom: 1.9.2
+:remapping 52 mods from modImplementation (java-api)
+
+> Task :compileJava FAILED
+/home/runner/work/tropifix/tropifix/src/main/java/com/tropimon/tropifix/mixin/PcGuiDragCrashMixin.java:66: error: cannot find symbol
+            return ((PCGUI) (Object) this).getStorageWidget() != null;
+                                          ^
+  symbol:   method getStorageWidget()
+  location: class PCGUI
+1 error
+[Incubating] Problems report is available at: file:///home/runner/work/tropifix/tropifix/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/runner/work/tropifix/tropifix/src/main/java/com/tropimon/tropifix/mixin/PcGuiDragCrashMixin.java:66: error: cannot find symbol
+              return ((PCGUI) (Object) this).getStorageWidget() != null;
+                                            ^
+    symbol:   method getStorageWidget()
+    location: class PCGUI
+  1 error
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights.
+
+BUILD FAILED in 1m 27s
+1 actionable task: 1 executed
+
+===== INTROSPECTION PCGUI =====
+JAR: /home/runner/.gradle/caches/modules-2/files-2.1/maven.modrinth/MdwFAVRL/kF7CvxTo/f192cda3fdfec0f20d1dee1887ec1b9e77b1618c/MdwFAVRL-kF7CvxTo.jar
+Compiled from "PCGUI.java"
+public final class com.cobblemon.mod.common.client.gui.pc.PCGUI extends net.minecraft.class_437 implements com.cobblemon.mod.common.client.gui.CobblemonRenderable {
+  public static final com.cobblemon.mod.common.client.gui.pc.PCGUI$Companion Companion;
+  private final com.cobblemon.mod.common.client.storage.ClientPC pc;
+  private final com.cobblemon.mod.common.client.storage.ClientParty party;
+  private final com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration configuration;
+  private final int openOnBox;
+  private final java.util.Set<net.minecraft.class_2960> unseenWallpapers;
+  private com.cobblemon.mod.common.client.gui.pc.StorageWidget storageWidget;
+  private com.cobblemon.mod.common.client.gui.pc.BoxNameWidget boxNameWidget;
+  private com.cobblemon.mod.common.client.gui.pc.FilterWidget filterWidget;
+  private com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget wallpaperWidget;
+  private com.cobblemon.mod.common.client.gui.summary.widgets.MarkingsWidget markingsWidget;
+  private com.cobblemon.mod.common.client.gui.summary.widgets.ModelWidget modelWidget;
+  private com.cobblemon.mod.common.pokemon.Pokemon previewPokemon;
+  private java.lang.Boolean isPreviewInParty;
+  private boolean showCosmeticItem;
+  private int currentStatIndex;
+  private final java.util.List<com.cobblemon.mod.common.client.gui.pc.IconButton> optionButtons;
+  private com.cobblemon.mod.common.api.storage.pc.search.Search search;
+  private int ticksElapsed;
+  private int selectPointerOffsetY;
+  private boolean selectPointerOffsetIncrement;
+  private boolean displayOptions;
+  public static final int BASE_WIDTH;
+  public static final int BASE_HEIGHT;
+  public static final int INFO_BOX_WIDTH;
+  public static final int INFO_BOX_HEIGHT;
+  public static final int RIGHT_PANEL_WIDTH;
+  public static final int RIGHT_PANEL_HEIGHT;
+  public static final int TYPE_SPACER_WIDTH;
+  public static final int TYPE_SPACER_HEIGHT;
+  public static final int PC_SPACER_WIDTH;
+  public static final int PC_SPACER_HEIGHT;
+  public static final int PORTRAIT_SIZE;
+  public static final float SCALE;
+  public static final int STAT_INFO;
+  public static final int STAT_IV;
+  public static final int STAT_EV;
+  private static final net.minecraft.class_5250[] statLabels;
+  private static final com.cobblemon.mod.common.api.pokemon.stats.Stats[] stats;
+  private static final net.minecraft.class_2960 baseResource;
+  private static final net.minecraft.class_2960 portraitBackgroundResource;
+  private static final net.minecraft.class_2960 infoBoxResource;
+  private static final net.minecraft.class_2960 infoBoxStatResource;
+  private static final net.minecraft.class_2960 buttonOptionsResource;
+  private static final net.minecraft.class_2960 buttonWallpaperResource;
+  private static final net.minecraft.class_2960 buttonInfoArrow;
+  private static final net.minecraft.class_2960 topSpacerResource;
+  private static final net.minecraft.class_2960 bottomSpacerResource;
+  private static final net.minecraft.class_2960 rightSpacerResource;
+  private static final net.minecraft.class_2960 typeSpacerResource;
+  private static final net.minecraft.class_2960 typeSpacerSingleResource;
+  private static final net.minecraft.class_2960 typeSpacerDoubleResource;
+  public com.cobblemon.mod.common.client.gui.pc.PCGUI(com.cobblemon.mod.common.client.storage.ClientPC, com.cobblemon.mod.common.client.storage.ClientParty, com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration, int, java.util.Set<net.minecraft.class_2960>);
+  public com.cobblemon.mod.common.client.gui.pc.PCGUI(com.cobblemon.mod.common.client.storage.ClientPC, com.cobblemon.mod.common.client.storage.ClientParty, com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration, int, java.util.Set, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final com.cobblemon.mod.common.client.storage.ClientPC getPc();
+  public final com.cobblemon.mod.common.client.storage.ClientParty getParty();
+  public final com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration getConfiguration();
+  public final int getOpenOnBox();
+  public final java.util.Set<net.minecraft.class_2960> getUnseenWallpapers();
+  public final com.cobblemon.mod.common.client.gui.pc.StorageWidget getStorage();
+  public final com.cobblemon.mod.common.pokemon.Pokemon getPreviewPokemon$common();
+  public final void setPreviewPokemon$common(com.cobblemon.mod.common.pokemon.Pokemon);
+  public final java.lang.Boolean isPreviewInParty();
+  public final void setPreviewInParty(java.lang.Boolean);
+  public final com.cobblemon.mod.common.api.storage.pc.search.Search getSearch();
+  public final void setSearch(com.cobblemon.mod.common.api.storage.pc.search.Search);
+  public final int getTicksElapsed();
+  public final void setTicksElapsed(int);
+  public final int getSelectPointerOffsetY();
+  public final void setSelectPointerOffsetY(int);
+  public final boolean getSelectPointerOffsetIncrement();
+  public final void setSelectPointerOffsetIncrement(boolean);
+  public final boolean getDisplayOptions();
+  public final void setDisplayOptions(boolean);
+  protected void method_57734(float);
+  protected void method_57735(net.minecraft.class_332);
+  protected void method_25426();
+  public void method_25394(net.minecraft.class_332, int, int, float);
+  public final void closeNormally(boolean);
+  public static void closeNormally$default(com.cobblemon.mod.common.client.gui.pc.PCGUI, boolean, int, java.lang.Object);
+  public boolean method_25402(double, double, int);
+  public boolean method_25401(double, double, double, double);
+  public boolean method_25403(double, double, int, double, double);
+  public boolean method_25404(int, int, int);
+  public boolean method_25421();
+  public void method_25393();
+  public final void playSound(net.minecraft.class_3414);
+  private final void saveMarkings(boolean);
+  static void saveMarkings$default(com.cobblemon.mod.common.client.gui.pc.PCGUI, boolean, int, java.lang.Object);
+  public final void setPreviewPokemon(com.cobblemon.mod.common.pokemon.Pokemon, boolean);
+  public static void setPreviewPokemon$default(com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.pokemon.Pokemon, boolean, int, java.lang.Object);
+  private static final void init$lambda$0(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$1(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$2(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final kotlin.Unit init$lambda$3(com.cobblemon.mod.common.client.gui.pc.PCGUI);
+  private static final void init$lambda$4(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$7(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$9$0(com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.api.pokemon.PokemonSortMode, net.minecraft.class_4185);
+  private static final void init$lambda$10(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$11(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  static {};
+}
+----- classes du package pc -----
+BoxNameWidget.class
+BoxStorageSlot.class
+FilterWidget$Companion.class
+FilterWidget.class
+GrabbedStorageSlot.class
+IconButton$Companion.class
+IconButton.class
+NavigationButton$Companion.class
+NavigationButton.class
+PCGUI$Companion.class
+PCGUI.class
+PCGUIConfiguration.class
+PartyStorageSlot.class
+ReleaseButton$Companion.class
+ReleaseButton.class
+ReleaseConfirmButton$Companion.class
+ReleaseConfirmButton.class
+StorageSlot$Companion.class
+StorageSlot$WhenMappings.class
+StorageSlot.class
+StorageWidget$Companion.class
+StorageWidget.class
+TextWidget.class
+WallpapersScrollingWidget$Companion.class
+WallpapersScrollingWidget$WallpaperEntry.class
+WallpapersScrollingWidget.class
