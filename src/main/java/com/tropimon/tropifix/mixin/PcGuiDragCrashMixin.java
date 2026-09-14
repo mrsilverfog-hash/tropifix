@@ -15,17 +15,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * ce moment, mouseDragged lit le widget et Kotlin leve
  * UninitializedPropertyAccessException, ce qui fait planter le client.
  *
- * Deux noms de methode sont cibles volontairement : "mouseDragged" est le nom
- * yarn utilise a la compilation, "method_25403" le nom intermediary present
- * dans le jar remappe de Cobblemon a l'execution. Selon que le refmap couvre
- * ou non un membre herite de Minecraft dans une classe de mod, c'est l'un ou
- * l'autre qui correspond ; require reste a 0 pour que celui qui ne correspond
- * pas soit simplement ignore.
- *
  * Le test d'initialisation passe par le getter Kotlin dans un try/catch plutot
  * que par une lecture reflexive du champ de sauvegarde : c'est precisement
  * l'exception qu'on veut eviter qui sert de signal, donc aucune hypothese sur
- * le nom interne du champ n'est necessaire.
+ * le nom interne du champ n'est necessaire. La version 1.0.0 utilisait la
+ * reflexion et retombait silencieusement sur son cas "champ introuvable", ce
+ * qui laissait le crash se produire.
+ *
+ * require = 1 est volontaire ici : si une future version de Cobblemon renomme
+ * ou supprime la methode, mieux vaut un echec visible au demarrage qu'une
+ * garde qui ne protege plus rien sans le dire.
  */
 @Mixin(PCGUI.class)
 public abstract class PcGuiDragCrashMixin {
@@ -35,13 +34,10 @@ public abstract class PcGuiDragCrashMixin {
     private static boolean tropifix$blocageSignale = false;
 
     @Inject(
-            method = {
-                    "mouseDragged(DDIDD)Z",
-                    "method_25403(DDIDD)Z"
-            },
+            method = "mouseDragged(DDIDD)Z",
             at = @At("HEAD"),
             cancellable = true,
-            require = 0
+            require = 1
     )
     private void tropifix$ignorerGlisserAvantInitialisation(
             double sourisX,
