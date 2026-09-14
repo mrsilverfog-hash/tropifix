@@ -1,12 +1,12 @@
 package com.tropimon.tropifix.mixin;
 
 import com.cobblemon.mod.common.client.gui.pc.PCGUI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.lang.reflect.Field;
 
 /**
  * Corrige un crash de Cobblemon 1.7.x : PCGUI.storageWidget est une propriete
@@ -15,21 +15,30 @@ import java.lang.reflect.Field;
  * ce moment, mouseDragged lit le widget et Kotlin leve
  * UninitializedPropertyAccessException, ce qui fait planter le client.
  *
- * La latence reseau (serveur derriere Velocity) elargit nettement cette
- * fenetre, d'ou la reproductibilite en jeu.
+ * Deux noms de methode sont cibles volontairement : "mouseDragged" est le nom
+ * yarn utilise a la compilation, "method_25403" le nom intermediary present
+ * dans le jar remappe de Cobblemon a l'execution. Selon que le refmap couvre
+ * ou non un membre herite de Minecraft dans une classe de mod, c'est l'un ou
+ * l'autre qui correspond ; require reste a 0 pour que celui qui ne correspond
+ * pas soit simplement ignore.
  *
- * On annule simplement l'evenement tant que le widget n'existe pas : la valeur
- * de retour false est exactement ce que renvoie Screen.mouseDragged par defaut,
- * donc aucun comportement n'est modifie une fois le PC charge.
+ * Le test d'initialisation passe par le getter Kotlin dans un try/catch plutot
+ * que par une lecture reflexive du champ de sauvegarde : c'est precisement
+ * l'exception qu'on veut eviter qui sert de signal, donc aucune hypothese sur
+ * le nom interne du champ n'est necessaire.
  */
 @Mixin(PCGUI.class)
 public abstract class PcGuiDragCrashMixin {
 
-    private static Field tropifix$champStorageWidget;
-    private static boolean tropifix$champDejaCherche = false;
+    private static final Logger TROPIFIX$LOG = LoggerFactory.getLogger("tropifix");
+    private static boolean tropifix$premierPassageSignale = false;
+    private static boolean tropifix$blocageSignale = false;
 
     @Inject(
-            method = "mouseDragged(DDIDD)Z",
+            method = {
+                    "mouseDragged(DDIDD)Z",
+                    "method_25403(DDIDD)Z"
+            },
             at = @At("HEAD"),
             cancellable = true,
             require = 0
@@ -42,35 +51,25 @@ public abstract class PcGuiDragCrashMixin {
             double deltaY,
             CallbackInfoReturnable<Boolean> cir
     ) {
-        if (!tropifix$widgetPret(this)) {
+        if (!tropifix$premierPassageSignale) {
+            tropifix$premierPassageSignale = true;
+            TROPIFIX$LOG.info("[TropiFix] Garde PCGUI.mouseDragged active (injection appliquee).");
+        }
+
+        if (!tropifix$widgetPret()) {
+            if (!tropifix$blocageSignale) {
+                tropifix$blocageSignale = true;
+                TROPIFIX$LOG.info("[TropiFix] Glisser ignore : storageWidget pas encore initialise.");
+            }
             cir.setReturnValue(false);
         }
     }
 
-    /**
-     * Lit directement le champ de sauvegarde du lateinit. Le getter Kotlin, lui,
-     * leve l'exception qu'on cherche justement a eviter, donc on ne peut pas
-     * l'utiliser ici. Si le champ est introuvable (renommage dans une future
-     * version de Cobblemon), on laisse passer l'appel normalement.
-     */
-    private static boolean tropifix$widgetPret(Object ecran) {
+    private boolean tropifix$widgetPret() {
         try {
-            if (!tropifix$champDejaCherche) {
-                tropifix$champDejaCherche = true;
-                for (Field champ : PCGUI.class.getDeclaredFields()) {
-                    if ("storageWidget".equals(champ.getName())) {
-                        champ.setAccessible(true);
-                        tropifix$champStorageWidget = champ;
-                        break;
-                    }
-                }
-            }
-            if (tropifix$champStorageWidget == null) {
-                return true;
-            }
-            return tropifix$champStorageWidget.get(ecran) != null;
+            return ((PCGUI) (Object) this).getStorageWidget() != null;
         } catch (Throwable erreur) {
-            return true;
+            return false;
         }
     }
 }
