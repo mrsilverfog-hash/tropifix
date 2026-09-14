@@ -1,9 +1,11 @@
 package com.tropimon.tropifix.mixin;
 
 import com.cobblemon.mod.common.client.gui.pc.PCGUI;
+import com.cobblemon.mod.common.client.gui.pc.StorageWidget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -15,16 +17,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * ce moment, mouseDragged lit le widget et Kotlin leve
  * UninitializedPropertyAccessException, ce qui fait planter le client.
  *
- * Le test d'initialisation passe par le getter Kotlin dans un try/catch plutot
- * que par une lecture reflexive du champ de sauvegarde : c'est precisement
- * l'exception qu'on veut eviter qui sert de signal, donc aucune hypothese sur
- * le nom interne du champ n'est necessaire. La version 1.0.0 utilisait la
- * reflexion et retombait silencieusement sur son cas "champ introuvable", ce
- * qui laissait le crash se produire.
+ * Le champ est prive et sans getter public (verifie au javap sur le jar
+ * remappe), donc on y accede par @Shadow : lecture directe du champ de
+ * sauvegarde, sans passer par l'accesseur Kotlin qui est justement ce qui leve
+ * l'exception. La version 1.0.0 tentait la meme chose par reflexion et
+ * retombait silencieusement sur son cas d'echec, ce qui laissait le crash
+ * se produire.
  *
- * require = 1 est volontaire ici : si une future version de Cobblemon renomme
- * ou supprime la methode, mieux vaut un echec visible au demarrage qu'une
- * garde qui ne protege plus rien sans le dire.
+ * require = 1 est volontaire : si une future version de Cobblemon renomme ou
+ * supprime la methode, mieux vaut un echec visible au demarrage qu'une garde
+ * qui ne protege plus rien sans le dire.
  */
 @Mixin(PCGUI.class)
 public abstract class PcGuiDragCrashMixin {
@@ -32,6 +34,9 @@ public abstract class PcGuiDragCrashMixin {
     private static final Logger TROPIFIX$LOG = LoggerFactory.getLogger("tropifix");
     private static boolean tropifix$premierPassageSignale = false;
     private static boolean tropifix$blocageSignale = false;
+
+    @Shadow
+    private StorageWidget storageWidget;
 
     @Inject(
             method = "mouseDragged(DDIDD)Z",
@@ -52,20 +57,12 @@ public abstract class PcGuiDragCrashMixin {
             TROPIFIX$LOG.info("[TropiFix] Garde PCGUI.mouseDragged active (injection appliquee).");
         }
 
-        if (!tropifix$widgetPret()) {
+        if (this.storageWidget == null) {
             if (!tropifix$blocageSignale) {
                 tropifix$blocageSignale = true;
                 TROPIFIX$LOG.info("[TropiFix] Glisser ignore : storageWidget pas encore initialise.");
             }
             cir.setReturnValue(false);
-        }
-    }
-
-    private boolean tropifix$widgetPret() {
-        try {
-            return ((PCGUI) (Object) this).getStorageWidget() != null;
-        } catch (Throwable erreur) {
-            return false;
         }
     }
 }
