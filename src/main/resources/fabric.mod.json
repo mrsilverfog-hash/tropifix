@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "tropifix",
+  "version": "${version}",
+  "name": "TropiFix",
+  "description": "Correctifs client pour des bugs de Cobblemon rencontres sur Tropimon.",
+  "authors": [
+    "Maitre"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "mixins": [
+    "tropifix.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}
