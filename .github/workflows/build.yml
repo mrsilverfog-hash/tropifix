@@ -27,6 +27,24 @@ jobs:
         run: ./gradlew build 2>&1 | tee build-output.log; exit ${PIPESTATUS[0]}
         shell: bash
 
+      - name: Inspecter PCGUI dans le jar remappe
+        if: always()
+        run: |
+          echo "" >> build-output.log
+          echo "===== INTROSPECTION PCGUI =====" >> build-output.log
+          jar=$(find ~/.gradle -iname "*.jar" \( -ipath "*cobblemon*" -o -iname "*MdwFAVRL*" \) 2>/dev/null | head -20 | while read f; do
+                  if unzip -l "$f" 2>/dev/null | grep -q "client/gui/pc/PCGUI.class"; then echo "$f"; break; fi
+                done)
+          echo "JAR: $jar" >> build-output.log
+          if [ -n "$jar" ]; then
+            rm -rf /tmp/pcgui && mkdir -p /tmp/pcgui && cd /tmp/pcgui
+            unzip -o -q "$jar" "com/cobblemon/mod/common/client/gui/pc/*" || true
+            javap -p com/cobblemon/mod/common/client/gui/pc/PCGUI.class >> $GITHUB_WORKSPACE/build-output.log 2>&1 || true
+            echo "----- classes du package pc -----" >> $GITHUB_WORKSPACE/build-output.log
+            ls com/cobblemon/mod/common/client/gui/pc/ >> $GITHUB_WORKSPACE/build-output.log 2>&1 || true
+          fi
+        shell: bash
+
       - name: Pousser le log en cas d'echec
         if: failure()
         run: |
