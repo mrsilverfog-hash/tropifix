@@ -37,9 +37,9 @@ import java.util.Properties;
 /**
  * Minuteur d'événements Tropimon.
  *
- * À 0h00, 10h30, 15h30, 18h30 et 21h00 (heure de l'ordinateur), un minuteur de 5 minutes
- * apparaît à l'écran. Il bipe quand il reste 1 minute, sonne une dernière fois à 0, puis
- * disparaît. Si on se connecte en cours de créneau (ex : 10h32), il démarre avec le temps
+ * À 0h00, 10h30, 15h30, 18h30 et 21h30 (heure de l'ordinateur), un minuteur de 5 minutes
+ * apparaît à l'écran. Il bipe quand il reste 1 minute et 30 secondes, puis disparaît
+ * sans bruit à 0. Si on se connecte en cours de créneau (ex : 10h32), il démarre avec le temps
  * restant (3 min).
  *
  * Déplacement : ouvrir le tchat (T), puis cliquer-glisser le minuteur. Clic droit dessus
@@ -57,12 +57,12 @@ public final class EventTimer {
         LocalTime.of(10, 30),
         LocalTime.of(15, 30),
         LocalTime.of(18, 30),
-        LocalTime.of(21, 0)
+        LocalTime.of(21, 30)
     );
     private static final Duration DURATION = Duration.ofMinutes(5);
     private static final long WARN_MS = 60_000L;
+    private static final long WARN2_MS = 30_000L;
     private static final long TEST_DURATION_MS = 70_000L;
-    private static final long FINISHED_DISPLAY_MS = 3_000L;
 
     // Taille du widget (coordonnées GUI mises à l'échelle)
     private static final int W = 62;
@@ -71,7 +71,7 @@ public final class EventTimer {
     // État du minuteur
     private static long endMillis = -1L;          // -1 = aucun minuteur
     private static boolean warned = false;
-    private static boolean finishedSoundPlayed = false;
+    private static boolean warned30 = false;
     private static String lastSlotKey = "";
 
     // Bips en attente : délai en ticks avant chaque note
@@ -158,12 +158,12 @@ public final class EventTimer {
                 warned = true;
                 queueBeeps(new float[]{1.6f, 1.6f, 1.6f}, 6);
             }
-            if (!finishedSoundPlayed && remaining <= 0) {
-                finishedSoundPlayed = true;
-                queueBeeps(new float[]{1.2f, 1.8f}, 4);
+            if (!warned30 && remaining <= WARN2_MS && remaining > 0) {
+                warned30 = true;
+                queueBeeps(new float[]{1.6f, 1.6f, 1.6f}, 6);
             }
-            if (remaining <= -FINISHED_DISPLAY_MS) {
-                endMillis = -1L;
+            if (remaining <= 0) {
+                endMillis = -1L; // fini : disparaît sans bruit
             }
         }
 
@@ -205,7 +205,7 @@ public final class EventTimer {
     private static void startTimer(long end) {
         endMillis = end;
         warned = false;
-        finishedSoundPlayed = false;
+        warned30 = false;
     }
 
     private static void queueBeeps(float[] pitches, int spacingTicks) {
@@ -255,8 +255,6 @@ public final class EventTimer {
         int textColor;
         if (!active) {
             textColor = 0xFF888888;                       // aperçu (tchat ouvert, pas de minuteur)
-        } else if (remaining <= 0) {
-            textColor = 0xFFFF4040;
         } else if (remaining <= WARN_MS) {
             // clignote en rouge / jaune pendant la dernière minute
             textColor = ((System.currentTimeMillis() / 500) % 2 == 0) ? 0xFFFF4040 : 0xFFFFDD33;
