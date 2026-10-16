@@ -3,19 +3,25 @@
   "id": "tropifix",
   "version": "${version}",
   "name": "TropiFix",
-  "description": "Correctifs client pour des bugs de Cobblemon rencontres sur Tropimon.",
+  "description": "Correctifs client pour des bugs de Cobblemon rencontres sur Tropimon, plus un minuteur d'evenements.",
   "authors": [
     "Maitre"
   ],
   "contact": {},
   "license": "MIT",
   "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.tropimon.tropifix.TropiFixClient"
+    ]
+  },
   "mixins": [
     "tropifix.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.9",
     "minecraft": "~1.21.1",
-    "java": ">=21"
+    "java": ">=21",
+    "fabric-api": "*"
   }
 }
