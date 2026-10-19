@@ -37,7 +37,7 @@ import java.util.Properties;
 /**
  * Minuteur d'événements Tropimon.
  *
- * À 0h00, 10h30, 15h30, 18h30 et 21h30 (heure de l'ordinateur), un minuteur de 5 minutes
+ * À 0h00, 10h30, 15h30, 18h30, 20h00 et 21h30 (heure de l'ordinateur), un minuteur de 5 minutes
  * apparaît à l'écran. Il bipe quand il reste 1 minute et 30 secondes, puis disparaît
  * sans bruit à 0. Si on se connecte en cours de créneau (ex : 10h32), il démarre avec le temps
  * restant (3 min).
@@ -57,6 +57,7 @@ public final class EventTimer {
         LocalTime.of(10, 30),
         LocalTime.of(15, 30),
         LocalTime.of(18, 30),
+        LocalTime.of(20, 0),
         LocalTime.of(21, 30)
     );
     private static final Duration DURATION = Duration.ofMinutes(5);
