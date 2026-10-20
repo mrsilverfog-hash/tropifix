@@ -1,5 +1,7 @@
 package com.tropimon.tropifix.timer;
 
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -41,6 +43,8 @@ import java.util.Properties;
  * apparaît à l'écran. Il bipe quand il reste 1 minute et 30 secondes, puis disparaît
  * sans bruit à 0. Si on se connecte en cours de créneau (ex : 10h32), il démarre avec le temps
  * restant (3 min).
+ *
+ * La commande /chrono lance aussi un minuteur de 5 minutes à la main.
  *
  * Déplacement : ouvrir le tchat (T), puis cliquer-glisser le minuteur. Clic droit dessus
  * (tchat ouvert) = fermer le minuteur en cours. La touche « Verrouiller le minuteur »
@@ -101,6 +105,14 @@ public final class EventTimer {
             "Tester le minuteur (1 min 10)", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, "TropiFix"));
 
         ClientTickEvents.END_CLIENT_TICK.register(EventTimer::tick);
+
+        // /chrono : lance un minuteur de 5 minutes à la main (mêmes bips à 1 min et 30 s)
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
+            dispatcher.register(ClientCommandManager.literal("chrono").executes(ctx -> {
+                startTimer(System.currentTimeMillis() + DURATION.toMillis());
+                ctx.getSource().sendFeedback(Text.literal("§eMinuteur : §f5 minutes §elancées"));
+                return 1;
+            })));
         HudRenderCallback.EVENT.register((ctx, tickCounter) -> render(ctx));
 
         ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {

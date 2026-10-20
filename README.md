@@ -17,6 +17,7 @@ A 0h00, 10h30, 15h30, 18h30, 20h00 et 21h30 (heure de l'ordinateur), un minuteur
 5 minutes apparait a l'ecran. Il bipe quand il reste 1 minute et 30 secondes,
 puis disparait sans bruit a 0. Connecte en cours de creneau, il demarre avec le temps restant.
 
+- `/chrono` : lance un minuteur de 5 minutes a la main.
 - Deplacer : ouvrir le tchat (T) puis cliquer-glisser le minuteur.
 - Fermer le minuteur en cours : clic droit dessus, tchat ouvert.
 - Touches (Options > Controles, categorie TropiFix, non assignees par defaut) :
