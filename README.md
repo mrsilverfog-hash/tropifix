@@ -11,13 +11,12 @@ de fonctionnalite, aucun changement de comportement une fois le bug evite.
 | `PcGuiDragCrashMixin` | Crash `UninitializedPropertyAccessException: lateinit property storageWidget` quand on clique-glisse dans l'ecran du PC avant que les boites soient chargees (Cobblemon 1.7.x). |
 | `WorldChunkClearCrashMixin` | Deconnexion "Erreur de protocole reseau" (`NullPointerException` dans `WorldChunk.clear`) quand Farsight recharge un chunk dont le cache est corrompu. |
 
-## Minuteur d'evenements
+## Minuteur de raid
 
-A 0h00, 10h30, 15h30, 18h30, 20h00 et 21h30 (heure de l'ordinateur), un minuteur de
-5 minutes apparait a l'ecran. Il bipe quand il reste 1 minute et 30 secondes,
-puis disparait sans bruit a 0. Connecte en cours de creneau, il demarre avec le temps restant.
+Des qu'une notification Tropimon annonce un Raid, un Mega Raid ou un boss mondial,
+un minuteur de 5 minutes apparait a l'ecran. Il bipe quand il reste 1 minute et
+30 secondes, puis disparait sans bruit a 0.
 
-- `/chrono` : lance un minuteur de 5 minutes a la main.
 - Deplacer : ouvrir le tchat (T) puis cliquer-glisser le minuteur.
 - Fermer le minuteur en cours : clic droit dessus, tchat ouvert.
 - Touches (Options > Controles, categorie TropiFix, non assignees par defaut) :

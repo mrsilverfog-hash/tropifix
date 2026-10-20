@@ -1,7 +1,5 @@
 package com.tropimon.tropifix.timer;
 
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
@@ -29,22 +27,27 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Minuteur d'événements Tropimon.
  *
- * À 0h00, 10h30, 15h30, 18h30, 20h00 et 21h30 (heure de l'ordinateur), un minuteur de 5 minutes
- * apparaît à l'écran. Il bipe quand il reste 1 minute et 30 secondes, puis disparaît
- * sans bruit à 0. Si on se connecte en cours de créneau (ex : 10h32), il démarre avec le temps
- * restant (3 min).
+ * Un minuteur de 5 minutes apparaît à l'écran dès qu'une notification Tropimon annonce
+ * un Raid, un Méga Raid ou un boss mondial. Il bipe quand il reste 1 minute et 30 secondes,
+ * puis disparaît sans bruit à 0.
  *
- * La commande /chrono lance aussi un minuteur de 5 minutes à la main.
+ * Les notifications sont lues par réflexion dans le NotificationManager de TropimodClient
+ * (aucune dépendance de compilation) : on reconnaît la clé de description
+ * gui.tropimod.notification.raid.triggered / triggered_mega / scheduled.
  *
  * Déplacement : ouvrir le tchat (T), puis cliquer-glisser le minuteur. Clic droit dessus
  * (tchat ouvert) = fermer le minuteur en cours. La touche « Verrouiller le minuteur »
@@ -55,15 +58,6 @@ public final class EventTimer {
 
     private static final Logger LOG = LoggerFactory.getLogger("tropifix");
 
-    // Heures de déclenchement et durée du minuteur
-    private static final List<LocalTime> SLOTS = List.of(
-        LocalTime.of(0, 0),
-        LocalTime.of(10, 30),
-        LocalTime.of(15, 30),
-        LocalTime.of(18, 30),
-        LocalTime.of(20, 0),
-        LocalTime.of(21, 30)
-    );
     private static final Duration DURATION = Duration.ofMinutes(5);
     private static final long WARN_MS = 60_000L;
     private static final long WARN2_MS = 30_000L;
@@ -77,7 +71,6 @@ public final class EventTimer {
     private static long endMillis = -1L;          // -1 = aucun minuteur
     private static boolean warned = false;
     private static boolean warned30 = false;
-    private static String lastSlotKey = "";
 
     // Bips en attente : délai en ticks avant chaque note
     private static final int[] beepDelays = new int[8];
@@ -106,13 +99,6 @@ public final class EventTimer {
 
         ClientTickEvents.END_CLIENT_TICK.register(EventTimer::tick);
 
-        // /chrono : lance un minuteur de 5 minutes à la main (mêmes bips à 1 min et 30 s)
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
-            dispatcher.register(ClientCommandManager.literal("chrono").executes(ctx -> {
-                startTimer(System.currentTimeMillis() + DURATION.toMillis());
-                ctx.getSource().sendFeedback(Text.literal("§eMinuteur : §f5 minutes §elancées"));
-                return 1;
-            })));
         HudRenderCallback.EVENT.register((ctx, tickCounter) -> render(ctx));
 
         ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
@@ -162,7 +148,14 @@ public final class EventTimer {
             startTimer(System.currentTimeMillis() + TEST_DURATION_MS);
         }
 
-        checkSchedule();
+        try {
+            pollRaidNotifications();
+        } catch (Throwable t) {
+            if (!notifErrorLogged) {
+                notifErrorLogged = true;
+                LOG.warn("[Minuteur] Lecture des notifications Tropimon impossible", t);
+            }
+        }
 
         long now = System.currentTimeMillis();
         if (endMillis > 0) {
@@ -195,24 +188,94 @@ public final class EventTimer {
         }
     }
 
-    /** Démarre le minuteur si on est dans un créneau pas encore lancé. */
-    private static void checkSchedule() {
-        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
-        LocalDate today = now.toLocalDate();
-        for (int i = 0; i < SLOTS.size(); i++) {
-            LocalDateTime start = today.atTime(SLOTS.get(i));
-            LocalDateTime end = start.plus(DURATION);
-            if (now.isBefore(start) || !now.isBefore(end)) continue;
+    // ===================== NOTIFICATIONS DE RAID (TropimodClient) =====================
 
-            String key = today + "#" + i;
-            if (key.equals(lastSlotKey)) return;
-            lastSlotKey = key;
+    private static final String NOTIF_MANAGER_CLASS = "fr.erusel.tropimodclient.client.notification.NotificationManager";
+    private static final String NOTIF_CLASS = "fr.tropimon.tropimoncore.data.notification.Notification";
+    private static final Set<String> RAID_KEYS = Set.of(
+        "gui.tropimod.notification.raid.triggered",       // « X a déclenché un Raid ! »
+        "gui.tropimod.notification.raid.triggered_mega",  // « X a déclenché un Méga Raid ! »
+        "gui.tropimod.notification.raid.scheduled"        // « Un boss mondial est apparu ! »
+    );
 
-            long endEpoch = end.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-            startTimer(endEpoch);
-            LOG.info("[Minuteur] Créneau {} lancé", SLOTS.get(i));
+    private static boolean notifResolved = false;
+    private static boolean notifErrorLogged = false;
+    private static Method notifCurrent = null;
+    private static Method notifPinned = null;
+    private static Field notifQueue = null;
+    private static final Set<String> seenNotifIds = new HashSet<>();
+    private static final Set<Object> seenNotifObjects = Collections.newSetFromMap(new IdentityHashMap<>());
+    private static final Map<String, Method> methodCache = new HashMap<>();
+
+    private static void pollRaidNotifications() throws Exception {
+        if (!notifResolved) {
+            notifResolved = true;
+            Class<?> mgr;
+            try {
+                mgr = Class.forName(NOTIF_MANAGER_CLASS);
+            } catch (ClassNotFoundException e) {
+                LOG.info("[Minuteur] TropimodClient absent : pas de minuteur automatique sur les raids.");
+                return;
+            }
+            try { notifCurrent = mgr.getMethod("current"); } catch (NoSuchMethodException ignored) { }
+            try { notifPinned = mgr.getMethod("pinned"); } catch (NoSuchMethodException ignored) { }
+            try {
+                notifQueue = mgr.getDeclaredField("QUEUE");
+                notifQueue.setAccessible(true);
+            } catch (NoSuchFieldException ignored) { }
+        }
+        if (notifCurrent == null && notifPinned == null && notifQueue == null) return;
+
+        if (notifQueue != null && notifQueue.get(null) instanceof List<?> list) {
+            Object[] snapshot;
+            synchronized (list) {
+                snapshot = list.toArray();
+            }
+            for (Object pending : snapshot) handleNotification(pending);
+        }
+        if (notifCurrent != null) handleNotification(notifCurrent.invoke(null));
+        if (notifPinned != null) handleNotification(notifPinned.invoke(null));
+    }
+
+    /** Accepte une Notification, une ActiveNotification ou un Pending de la file d'attente. */
+    private static void handleNotification(Object holder) throws Exception {
+        if (holder == null) return;
+        Object notif = holder.getClass().getName().equals(NOTIF_CLASS) ? holder : call(holder, "notification");
+        if (notif == null || !notif.getClass().getName().equals(NOTIF_CLASS)) return;
+
+        // Chaque notification n'est traitée qu'une fois
+        Object idObj = call(notif, "id");
+        String id = idObj == null ? "" : idObj.toString();
+        if (!id.isEmpty()) {
+            if (!seenNotifIds.add(id)) return;
+        } else if (!seenNotifObjects.add(notif)) {
             return;
         }
+        if (seenNotifIds.size() > 300) seenNotifIds.clear();
+        if (seenNotifObjects.size() > 300) seenNotifObjects.clear();
+
+        Object desc = call(notif, "description");
+        Object key = desc == null ? null : call(desc, "value");
+        if (key == null || !RAID_KEYS.contains(key.toString())) return;
+
+        LOG.info("[Minuteur] Notification de raid ({}) : minuteur lancé", key);
+        startTimer(System.currentTimeMillis() + DURATION.toMillis());
+    }
+
+    private static Object call(Object target, String name) throws Exception {
+        if (target == null) return null;
+        String k = target.getClass().getName() + "#" + name;
+        Method m = methodCache.get(k);
+        if (m == null) {
+            try {
+                m = target.getClass().getMethod(name);
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+            m.setAccessible(true);
+            methodCache.put(k, m);
+        }
+        return m.invoke(target);
     }
 
     private static void startTimer(long end) {
