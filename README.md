@@ -23,6 +23,13 @@ un minuteur de 5 minutes apparait a l'ecran. Il bipe quand il reste 1 minute et
   "Verrouiller le minuteur" et "Tester le minuteur (1 min 10)".
 - Position et verrouillage gardes dans `config/tropifix_timer.properties`.
 
+## Radar par-dessus la monture
+
+TropimodClient masque son radar quand la barre d'endurance / de saut de la monture est
+utilisee (en vol par exemple). TropiFix redessine le radar par-dessus cette barre, au meme
+endroit, uniquement quand le radar suit ou detecte quelque chose ; sinon la barre
+d'endurance reste visible.
+
 ## Build
 
 Compile via GitHub Actions a chaque push sur `main`. Le jar se recupere dans
