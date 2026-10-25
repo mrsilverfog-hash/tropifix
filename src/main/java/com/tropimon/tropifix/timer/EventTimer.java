@@ -148,12 +148,16 @@ public final class EventTimer {
             startTimer(System.currentTimeMillis() + TEST_DURATION_MS);
         }
 
-        try {
-            pollRaidNotifications();
-        } catch (Throwable t) {
-            if (!notifErrorLogged) {
-                notifErrorLogged = true;
-                LOG.warn("[Minuteur] Lecture des notifications Tropimon impossible", t);
+        // Notifications lues 4 fois par seconde : une annonce reste affichée plusieurs secondes
+        if (++notifPollTick >= 5) {
+            notifPollTick = 0;
+            try {
+                pollRaidNotifications();
+            } catch (Throwable t) {
+                if (!notifErrorLogged) {
+                    notifErrorLogged = true;
+                    LOG.warn("[Minuteur] Lecture des notifications Tropimon impossible", t);
+                }
             }
         }
 
@@ -200,6 +204,7 @@ public final class EventTimer {
 
     private static boolean notifResolved = false;
     private static boolean notifErrorLogged = false;
+    private static int notifPollTick = 0;
     private static Method notifCurrent = null;
     private static Method notifPinned = null;
     private static Field notifQueue = null;
