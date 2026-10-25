@@ -10,6 +10,7 @@ de fonctionnalite, aucun changement de comportement une fois le bug evite.
 |---|---|
 | `PcGuiDragCrashMixin` | Crash `UninitializedPropertyAccessException: lateinit property storageWidget` quand on clique-glisse dans l'ecran du PC avant que les boites soient chargees (Cobblemon 1.7.x). |
 | `WorldChunkClearCrashMixin` | Deconnexion "Erreur de protocole reseau" (`NullPointerException` dans `WorldChunk.clear`) quand Farsight recharge un chunk dont le cache est corrompu. |
+| `ChatRefreshCrashMixin` | Crash `ConcurrentModificationException` dans `ChatHud.refresh` a la fermeture du tchat (declenche par Tropimon Chat Filter quand la liste des messages change pendant la reconstruction). |
 
 ## Minuteur de raid
 

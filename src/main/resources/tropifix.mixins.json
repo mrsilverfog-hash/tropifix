@@ -6,7 +6,8 @@
   "client": [
     "PcGuiDragCrashMixin",
     "WorldChunkClearCrashMixin",
-    "MountRadarMixin"
+    "MountRadarMixin",
+    "ChatRefreshCrashMixin"
   ],
   "injectors": {
     "defaultRequire": 1
