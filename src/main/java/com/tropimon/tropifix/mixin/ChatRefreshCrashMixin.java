@@ -25,14 +25,17 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class ChatRefreshCrashMixin {
 
     private static final Logger TROPIFIX$LOG = LoggerFactory.getLogger("tropifix");
-    private static int tropifix$retries = 0;
     private static int tropifix$crashsEvites = 0;
 
     @WrapMethod(method = "refresh")
     private void tropifix$safeRefresh(Operation<Void> original) {
+        tropifix$tryRefresh(original, 0);
+    }
+
+    /** Lance la reconstruction ; en cas d'échec, la relance au tick suivant (3 essais max). */
+    private static void tropifix$tryRefresh(Operation<Void> original, int attempt) {
         try {
             original.call();
-            tropifix$retries = 0;
         } catch (ConcurrentModificationException e) {
             tropifix$crashsEvites++;
             if (tropifix$crashsEvites == 1) {
@@ -40,12 +43,8 @@ public abstract class ChatRefreshCrashMixin {
             } else {
                 TROPIFIX$LOG.warn("[TropiFix] Crash du tchat évité (total : {})", tropifix$crashsEvites);
             }
-            if (tropifix$retries < 3) {
-                tropifix$retries++;
-                ChatHud self = (ChatHud) (Object) this;
-                MinecraftClient.getInstance().send(self::refresh);
-            } else {
-                tropifix$retries = 0;
+            if (attempt < 3) {
+                MinecraftClient.getInstance().execute(() -> tropifix$tryRefresh(original, attempt + 1));
             }
         }
     }
