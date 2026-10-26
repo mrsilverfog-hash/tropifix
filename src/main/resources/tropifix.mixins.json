@@ -7,7 +7,8 @@
     "PcGuiDragCrashMixin",
     "WorldChunkClearCrashMixin",
     "MountRadarMixin",
-    "ChatRefreshCrashMixin"
+    "ChatRefreshCrashMixin",
+    "OfflinePacketCrashMixin"
   ],
   "injectors": {
     "defaultRequire": 1
