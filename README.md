@@ -32,6 +32,13 @@ utilisee (en vol par exemple). TropiFix redessine le radar par-dessus cette barr
 endroit, uniquement quand le radar suit ou detecte quelque chose ; sinon la barre
 d'endurance reste visible.
 
+## Detection des blocs de paturage
+
+Contour et faisceau turquoise sur les blocs de paturage Cobblemon (`cobblemon:pasture`),
+dans un rayon de 96 blocs. Desactivee a chaque lancement ; la touche
+"Paturages : activer / desactiver" (Options > Controles, categorie TropiFix, non assignee
+par defaut) l'allume ou l'eteint.
+
 ## Build
 
 Compile via GitHub Actions a chaque push sur `main`. Le jar se recupere dans
