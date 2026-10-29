@@ -40,7 +40,7 @@ citrouilles) sont coupes ; les autres sons de blocs restent normaux.
 
 ## Relache multiple dans le PC
 
-Sous l'ecran des boites : "Selection multiple" (le clic gauche maintenu et glisse
+Au-dessus de l'ecran des boites : "Selection multiple" (le clic gauche maintenu et glisse
 selectionne les Pokemon au lieu de les deplacer), "Tout selectionner" (toute la boite) et
 "Relacher (N)", qui demande confirmation avant d'envoyer la relache au serveur. La selection
 ne vaut que pour la boite affichee.

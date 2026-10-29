@@ -32,7 +32,7 @@ import java.util.UUID;
 /**
  * Relâche multiple dans l'écran des boîtes du PC Cobblemon.
  *
- * Trois boutons sous l'écran du PC :
+ * Trois boutons au-dessus de l'écran du PC :
  *  - « Sélection multiple » : active un mode où le clic gauche (maintenu et glissé) sélectionne
  *    ou désélectionne les Pokémon de la boîte au lieu de les déplacer ;
  *  - « Tout sélectionner » : sélectionne tous les Pokémon de la boîte affichée ;
@@ -76,8 +76,8 @@ public abstract class PcMultiReleaseMixin extends Screen {
         int w = 110, h = 20, gap = 4;
         int total = 3 * w + 2 * gap;
         int x0 = (this.width - total) / 2;
-        int y = (this.height + GUI_HEIGHT) / 2 + 4;
-        if (y + h > this.height) y = (this.height - GUI_HEIGHT) / 2 - h - 4; // pas de place dessous
+        // Au-dessus de l'écran du PC (le dessous est occupé par les boutons de tri de PCSorter)
+        int y = Math.max(2, (this.height - GUI_HEIGHT) / 2 - h - 4);
 
         tropifix$toggleBtn = ButtonWidget.builder(Text.literal("Sélection multiple"), b -> {
             tropifix$multi = !tropifix$multi;
