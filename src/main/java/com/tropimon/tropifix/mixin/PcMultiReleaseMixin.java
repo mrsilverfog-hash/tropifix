@@ -39,16 +39,14 @@ import java.util.regex.Pattern;
 /**
  * Relâche multiple dans l'écran du PC Cobblemon.
  *
- * Trois boutons au-dessus de l'écran du PC :
- *  - « Sélection multiple » : le clic gauche (maintenu et glissé) sélectionne au lieu de déplacer ;
- *  - « Tout sélectionner » : sélectionne tous les Pokémon de la boîte affichée ;
- *  - « Relâcher (N) » : confirmation détaillée (boîtes concernées + liste des Pokémon), puis envoi
- *    de ReleasePCPokemonPacket pour chaque Pokémon (le même paquet que le bouton d'origine).
+ * Deux boutons au-dessus de l'écran du PC :
+ *  - « Sélection multiple » : le clic gauche (clic ou cliquer-glisser) sélectionne des Pokémon
+ *    au lieu de les déplacer ;
+ *  - « Relâcher (N) » : confirmation détaillée (boîte + liste des Pokémon), puis envoi de
+ *    ReleasePCPokemonPacket pour chaque Pokémon (le même paquet que le bouton d'origine).
  *
- * Deux vues :
- *  - vue boîte (« Boîte 1 ») : on sélectionne des Pokémon de la boîte affichée ;
- *  - vue liste des boîtes (« Box List 1-30 ») : chaque case est une boîte entière ; cliquer une case
- *    sélectionne (ou désélectionne) TOUS les Pokémon de cette boîte. Plusieurs boîtes possibles.
+ * Sélection Pokémon par Pokémon uniquement, dans la vue boîte. En vue liste des boîtes
+ * (« Box List 1-30 »), la sélection est désactivée : les clics vont à la liste.
  *
  * Tout est vérifié sur le contenu réel du PC (données Cobblemon côté client) : au moment de relâcher,
  * un Pokémon qui n'est plus à sa place n'est pas touché.
@@ -66,13 +64,10 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Unique private boolean tropifix$dragging = false;
     @Unique private boolean tropifix$dragAdd = true;
     @Unique private boolean tropifix$confirming = false;
-    @Unique private String tropifix$warning = null;
-    @Unique private long tropifix$warningUntil = 0;
     /** clé (boîte << 16 | emplacement) -> identifiant du Pokémon */
     @Unique private final Map<Long, UUID> tropifix$selection = new LinkedHashMap<>();
 
     @Unique private ButtonWidget tropifix$toggleBtn;
-    @Unique private ButtonWidget tropifix$allBtn;
     @Unique private ButtonWidget tropifix$releaseBtn;
     @Unique private ButtonWidget tropifix$yesBtn;
     @Unique private ButtonWidget tropifix$noBtn;
@@ -90,7 +85,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Inject(method = "init()V", at = @At("TAIL"))
     private void tropifix$addButtons(CallbackInfo ci) {
         int w = 110, h = 20, gap = 4;
-        int total = 3 * w + 2 * gap;
+        int total = 2 * w + gap;
         int x0 = (this.width - total) / 2;
         // Au-dessus de l'écran du PC (le dessous est occupé par les boutons de tri de PCSorter)
         int y = Math.max(2, (this.height - GUI_HEIGHT) / 2 - h - 4);
@@ -100,14 +95,9 @@ public abstract class PcMultiReleaseMixin extends Screen {
             if (!tropifix$multi) tropifix$selection.clear();
         }).dimensions(x0, y, w, h).build();
 
-        tropifix$allBtn = ButtonWidget.builder(Text.literal("Tout sélectionner"), b -> {
-            tropifix$multi = true;
-            tropifix$selectWholeBox(tropifix$currentBox(), true);
-        }).dimensions(x0 + w + gap, y, w, h).build();
-
         tropifix$releaseBtn = ButtonWidget.builder(Text.literal("Relâcher (0)"), b -> {
             if (!tropifix$selection.isEmpty()) tropifix$confirming = true;
-        }).dimensions(x0 + 2 * (w + gap), y, w, h).build();
+        }).dimensions(x0 + w + gap, y, w, h).build();
 
         int cy = this.height / 2 + 40;
         tropifix$yesBtn = ButtonWidget.builder(Text.literal("§cOui, relâcher"), b -> tropifix$releaseSelected())
@@ -116,7 +106,6 @@ public abstract class PcMultiReleaseMixin extends Screen {
             .dimensions(this.width / 2 + 4, cy, 100, h).build();
 
         this.addDrawableChild(tropifix$toggleBtn);
-        this.addDrawableChild(tropifix$allBtn);
         this.addDrawableChild(tropifix$releaseBtn);
         this.addDrawableChild(tropifix$yesBtn);
         this.addDrawableChild(tropifix$noBtn);
@@ -129,7 +118,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
         boolean ready = this.storageWidget != null;
         tropifix$toggleBtn.setMessage(Text.literal(tropifix$multi ? "§aSélection multiple : ON" : "Sélection multiple"));
         tropifix$releaseBtn.setMessage(Text.literal("Relâcher (" + tropifix$selection.size() + ")"));
-        tropifix$toggleBtn.visible = tropifix$allBtn.visible = tropifix$releaseBtn.visible = ready && !tropifix$confirming;
+        tropifix$toggleBtn.visible = tropifix$releaseBtn.visible = ready && !tropifix$confirming;
         tropifix$releaseBtn.active = !tropifix$selection.isEmpty();
         tropifix$yesBtn.visible = tropifix$noBtn.visible = tropifix$confirming;
     }
@@ -147,30 +136,11 @@ public abstract class PcMultiReleaseMixin extends Screen {
         if (!tropifix$multi || button != GLFW.GLFW_MOUSE_BUTTON_LEFT || this.storageWidget == null) return;
         if (tropifix$isOwnButton(mx, my)) return;
 
-        int listMode = tropifix$listMode();
-        Object slot = tropifix$slotAt(mx, my);
-
-        if (listMode != 0) {
-            // Vue liste des boîtes : une case = une boîte entière
-            if (slot == null) return;
-            Integer index = tropifix$rawSlotIndex(slot);
-            if (index == null) return;
-            if (listMode < 0) {
-                tropifix$warn("Page de la liste des boîtes non reconnue : passe en vue boîte pour sélectionner.");
-                cir.setReturnValue(true);
-                return;
-            }
-            int box = listMode - 1 + index;
-            if (box >= tropifix$boxCount()) { cir.setReturnValue(true); return; }
-            tropifix$dragAdd = !tropifix$isWholeBoxSelected(box);
-            tropifix$selectWholeBox(box, tropifix$dragAdd);
-            tropifix$dragging = true;
-            cir.setReturnValue(true);
-            return;
-        }
-
+        // Vue liste des boîtes : pas de sélection, le clic va à la liste
+        if (tropifix$listMode() != 0) return;
         // Un autre élément est sous la souris (menu d'un autre mod...) : on le laisse répondre
         if (tropifix$otherWidgetAt(mx, my)) return;
+        Object slot = tropifix$slotAt(mx, my);
         if (slot == null) return; // clic ailleurs (navigation...) : comportement normal
         Integer index = tropifix$slotIndex(slot);
         if (index == null) return;
@@ -184,19 +154,11 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Inject(method = "mouseDragged(DDIDD)Z", at = @At("HEAD"), cancellable = true)
     private void tropifix$onDrag(double mx, double my, int button, double dx, double dy, CallbackInfoReturnable<Boolean> cir) {
         if (!tropifix$multi || !tropifix$dragging || this.storageWidget == null) return;
-        int listMode = tropifix$listMode();
-        Object slot = tropifix$slotAt(mx, my);
+        if (tropifix$listMode() != 0) return;
+        Object slot = tropifix$otherWidgetAt(mx, my) ? null : tropifix$slotAt(mx, my);
         if (slot != null) {
-            if (listMode > 0) {
-                Integer index = tropifix$rawSlotIndex(slot);
-                if (index != null) {
-                    int box = listMode - 1 + index;
-                    if (box < tropifix$boxCount()) tropifix$selectWholeBox(box, tropifix$dragAdd);
-                }
-            } else if (listMode == 0 && !tropifix$otherWidgetAt(mx, my)) {
-                Integer index = tropifix$slotIndex(slot);
-                if (index != null) tropifix$applySlot(tropifix$currentBox(), index);
-            }
+            Integer index = tropifix$slotIndex(slot);
+            if (index != null) tropifix$applySlot(tropifix$currentBox(), index);
         }
         cir.setReturnValue(true);
     }
@@ -210,40 +172,6 @@ public abstract class PcMultiReleaseMixin extends Screen {
         } else {
             tropifix$selection.remove(key);
         }
-    }
-
-    /** Ajoute (ou retire) tous les Pokémon d'une boîte, d'après le contenu réel du PC. */
-    @Unique
-    private void tropifix$selectWholeBox(int box, boolean add) {
-        if (this.storageWidget == null || box < 0) return;
-        List<Pokemon> data = tropifix$boxData(box);
-        if (data == null) return;
-        for (int i = 0; i < data.size(); i++) {
-            long key = tropifix$key(box, i);
-            Pokemon p = data.get(i);
-            if (add && p != null) tropifix$selection.put(key, p.getUuid());
-            else tropifix$selection.remove(key);
-        }
-    }
-
-    @Unique
-    private boolean tropifix$isWholeBoxSelected(int box) {
-        List<Pokemon> data = tropifix$boxData(box);
-        if (data == null) return false;
-        boolean any = false;
-        for (int i = 0; i < data.size(); i++) {
-            if (data.get(i) == null) continue;
-            any = true;
-            if (!tropifix$selection.containsKey(tropifix$key(box, i))) return false;
-        }
-        return any;
-    }
-
-    @Unique
-    private int tropifix$selectedInBox(int box) {
-        int n = 0;
-        for (Long k : tropifix$selection.keySet()) if (tropifix$boxOf(k) == box) n++;
-        return n;
     }
 
     // ------------------------------------------------------------------ rendu
@@ -269,14 +197,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
                     if (!(slot instanceof ClickableWidget w) || !w.visible) continue;
                     Integer raw = tropifix$rawSlotIndex(slot);
                     if (raw == null) continue;
-                    boolean highlight;
-                    if (listMode > 0) {
-                        highlight = tropifix$selectedInBox(listMode - 1 + raw) > 0;
-                    } else if (listMode == 0) {
-                        highlight = tropifix$selection.containsKey(tropifix$key(current, raw));
-                    } else {
-                        highlight = false;
-                    }
+                    boolean highlight = listMode == 0 && tropifix$selection.containsKey(tropifix$key(current, raw));
                     if (highlight) {
                         int x = w.getX(), y = w.getY(), sw = w.getWidth(), sh = w.getHeight();
                         ctx.fill(x, y, x + sw, y + sh, 0x66FF2020);
@@ -287,11 +208,6 @@ public abstract class PcMultiReleaseMixin extends Screen {
         }
 
         tropifix$refreshButtons();
-
-        if (tropifix$warning != null && System.currentTimeMillis() < tropifix$warningUntil && !tropifix$confirming) {
-            int y = Math.max(2, (this.height - GUI_HEIGHT) / 2 - 36);
-            ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§c" + tropifix$warning), this.width / 2, y, 0xFFFFFF);
-        }
 
         if (tropifix$confirming) {
             ctx.fill(0, 0, this.width, this.height, 0xB0000000);
@@ -313,12 +229,6 @@ public abstract class PcMultiReleaseMixin extends Screen {
             tropifix$yesBtn.render(ctx, mouseX, mouseY, delta);
             tropifix$noBtn.render(ctx, mouseX, mouseY, delta);
         }
-    }
-
-    @Unique
-    private void tropifix$warn(String msg) {
-        tropifix$warning = msg;
-        tropifix$warningUntil = System.currentTimeMillis() + 4000;
     }
 
     /** « de la boîte 3 (Nom) » ou « des boîtes 3, 5 et 7 ». */
@@ -479,7 +389,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
 
     @Unique
     private boolean tropifix$isOwnButton(double mx, double my) {
-        for (ButtonWidget b : new ButtonWidget[]{tropifix$toggleBtn, tropifix$allBtn, tropifix$releaseBtn}) {
+        for (ButtonWidget b : new ButtonWidget[]{tropifix$toggleBtn, tropifix$releaseBtn}) {
             if (b != null && b.visible && b.isMouseOver(mx, my)) return true;
         }
         return false;
@@ -551,7 +461,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Unique
     private boolean tropifix$otherWidgetAt(double mx, double my) {
         for (Element el : this.children()) {
-            if (el == this.storageWidget || el == tropifix$toggleBtn || el == tropifix$allBtn
+            if (el == this.storageWidget || el == tropifix$toggleBtn
                 || el == tropifix$releaseBtn || el == tropifix$yesBtn || el == tropifix$noBtn) continue;
             if (el instanceof com.cobblemon.mod.common.client.gui.pc.StorageSlot) continue;
             if (el instanceof ClickableWidget w && !w.visible) continue;
