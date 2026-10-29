@@ -35,7 +35,8 @@ d'endurance reste visible.
 ## Sons coupes
 
 Les sons des distributeurs / droppers (tir, lancer, clic a vide) et des wagonnets en
-mouvement (roulement, interieur) sont coupes ; les autres sons de blocs restent normaux.
+mouvement (roulement, interieur) et des cisailles (tonte, coupe de plantes, ruches,
+citrouilles) sont coupes ; les autres sons de blocs restent normaux.
 
 ## Build
 

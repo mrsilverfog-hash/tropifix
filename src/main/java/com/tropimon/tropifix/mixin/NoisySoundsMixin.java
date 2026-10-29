@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Coupe uniquement les sons des distributeurs / droppers et des wagonnets en mouvement,
+ * Coupe uniquement les sons des distributeurs / droppers, des wagonnets en mouvement et des cisailles,
  * sans toucher au volume des blocs : casser, poser, marcher... restent audibles.
  *
  * Le son est simplement annulé avant d'être joué (SoundManager.play), d'après son identifiant.
@@ -26,7 +26,16 @@ public abstract class NoisySoundsMixin {
         // Wagonnets en mouvement
         Identifier.ofVanilla("entity.minecart.riding"),
         Identifier.ofVanilla("entity.minecart.inside"),
-        Identifier.ofVanilla("entity.minecart.inside.underwater")
+        Identifier.ofVanilla("entity.minecart.inside.underwater"),
+        // Cisailles (y compris dans les distributeurs) : tonte, coupe de plantes, ruches, citrouilles
+        Identifier.ofVanilla("item.shears.snip"),
+        Identifier.ofVanilla("entity.sheep.shear"),
+        Identifier.ofVanilla("entity.mooshroom.shear"),
+        Identifier.ofVanilla("entity.snow_golem.shear"),
+        Identifier.ofVanilla("entity.bogged.shear"),
+        Identifier.ofVanilla("block.beehive.shear"),
+        Identifier.ofVanilla("block.growing_plant.crop"),
+        Identifier.ofVanilla("block.pumpkin.carve")
     );
 
     @Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
