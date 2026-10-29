@@ -9,7 +9,8 @@
     "MountRadarMixin",
     "ChatRefreshCrashMixin",
     "OfflinePacketCrashMixin",
-    "NoisySoundsMixin"
+    "NoisySoundsMixin",
+    "PcMultiReleaseMixin"
   ],
   "injectors": {
     "defaultRequire": 1

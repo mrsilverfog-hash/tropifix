@@ -38,6 +38,13 @@ Les sons des distributeurs / droppers (tir, lancer, clic a vide) et des wagonnet
 mouvement (roulement, interieur) et des cisailles (tonte, coupe de plantes, ruches,
 citrouilles) sont coupes ; les autres sons de blocs restent normaux.
 
+## Relache multiple dans le PC
+
+Sous l'ecran des boites : "Selection multiple" (le clic gauche maintenu et glisse
+selectionne les Pokemon au lieu de les deplacer), "Tout selectionner" (toute la boite) et
+"Relacher (N)", qui demande confirmation avant d'envoyer la relache au serveur. La selection
+ne vaut que pour la boite affichee.
+
 ## Build
 
 Compile via GitHub Actions a chaque push sur `main`. Le jar se recupere dans
