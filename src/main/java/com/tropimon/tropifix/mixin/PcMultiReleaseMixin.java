@@ -7,9 +7,11 @@ import com.cobblemon.mod.common.net.messages.server.storage.pc.ReleasePCPokemonP
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -24,30 +26,39 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Relâche multiple dans l'écran des boîtes du PC Cobblemon.
+ * Relâche multiple dans l'écran du PC Cobblemon.
  *
  * Trois boutons au-dessus de l'écran du PC :
- *  - « Sélection multiple » : active un mode où le clic gauche (maintenu et glissé) sélectionne
- *    ou désélectionne les Pokémon de la boîte au lieu de les déplacer ;
+ *  - « Sélection multiple » : le clic gauche (maintenu et glissé) sélectionne au lieu de déplacer ;
  *  - « Tout sélectionner » : sélectionne tous les Pokémon de la boîte affichée ;
- *  - « Relâcher (N) » : demande confirmation (« Attention, N Pokémon de la boîte X vont être
- *    relâchés. Valider ? »), puis envoie au serveur la relâche de chaque Pokémon sélectionné
- *    (paquet ReleasePCPokemonPacket de Cobblemon, le même que le bouton de relâche d'origine).
+ *  - « Relâcher (N) » : confirmation détaillée (boîtes concernées + liste des Pokémon), puis envoi
+ *    de ReleasePCPokemonPacket pour chaque Pokémon (le même paquet que le bouton d'origine).
  *
- * La sélection ne vaut que pour la boîte affichée : changer de boîte la vide.
- * Mode désactivé = comportement normal du PC (déplacer, échanger...).
+ * Deux vues :
+ *  - vue boîte (« Boîte 1 ») : on sélectionne des Pokémon de la boîte affichée ;
+ *  - vue liste des boîtes (« Box List 1-30 ») : chaque case est une boîte entière ; cliquer une case
+ *    sélectionne (ou désélectionne) TOUS les Pokémon de cette boîte. Plusieurs boîtes possibles.
+ *
+ * Tout est vérifié sur le contenu réel du PC (données Cobblemon côté client) : au moment de relâcher,
+ * un Pokémon qui n'est plus à sa place n'est pas touché.
  */
 @Mixin(PCGUI.class)
 public abstract class PcMultiReleaseMixin extends Screen {
 
     @Unique private static final Logger TROPIFIX$LOG = LoggerFactory.getLogger("tropifix");
     @Unique private static final int GUI_HEIGHT = 205;
+    @Unique private static final Pattern TROPIFIX$LIST_RANGE = Pattern.compile("(?i)(?:box\\s*list|liste)[^0-9]*(\\d+)\\s*-\\s*(\\d+)");
 
     @Shadow private StorageWidget storageWidget;
 
@@ -55,9 +66,10 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Unique private boolean tropifix$dragging = false;
     @Unique private boolean tropifix$dragAdd = true;
     @Unique private boolean tropifix$confirming = false;
-    @Unique private int tropifix$selBox = -1;
-    /** emplacement dans la boîte -> identifiant du Pokémon */
-    @Unique private final Map<Integer, UUID> tropifix$selection = new LinkedHashMap<>();
+    @Unique private String tropifix$warning = null;
+    @Unique private long tropifix$warningUntil = 0;
+    /** clé (boîte << 16 | emplacement) -> identifiant du Pokémon */
+    @Unique private final Map<Long, UUID> tropifix$selection = new LinkedHashMap<>();
 
     @Unique private ButtonWidget tropifix$toggleBtn;
     @Unique private ButtonWidget tropifix$allBtn;
@@ -68,6 +80,10 @@ public abstract class PcMultiReleaseMixin extends Screen {
     protected PcMultiReleaseMixin(Text title) {
         super(title);
     }
+
+    @Unique private static long tropifix$key(int box, int slot) { return ((long) box << 16) | (slot & 0xFFFF); }
+    @Unique private static int tropifix$boxOf(long key) { return (int) (key >> 16); }
+    @Unique private static int tropifix$slotOf(long key) { return (int) (key & 0xFFFF); }
 
     // ------------------------------------------------------------------ boutons
 
@@ -86,7 +102,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
 
         tropifix$allBtn = ButtonWidget.builder(Text.literal("Tout sélectionner"), b -> {
             tropifix$multi = true;
-            tropifix$selectAll();
+            tropifix$selectWholeBox(tropifix$currentBox(), true);
         }).dimensions(x0 + w + gap, y, w, h).build();
 
         tropifix$releaseBtn = ButtonWidget.builder(Text.literal("Relâcher (0)"), b -> {
@@ -129,15 +145,38 @@ public abstract class PcMultiReleaseMixin extends Screen {
             return;
         }
         if (!tropifix$multi || button != GLFW.GLFW_MOUSE_BUTTON_LEFT || this.storageWidget == null) return;
-        // Un autre élément est sous la souris (liste des boîtes, menu d'un autre mod...) : on le laisse répondre
-        if (tropifix$otherWidgetAt(mx, my)) return;
+        if (tropifix$isOwnButton(mx, my)) return;
+
+        int listMode = tropifix$listMode();
         Object slot = tropifix$slotAt(mx, my);
-        if (slot == null) return; // clic ailleurs (boutons, navigation...) : comportement normal
+
+        if (listMode != 0) {
+            // Vue liste des boîtes : une case = une boîte entière
+            if (slot == null) return;
+            Integer index = tropifix$rawSlotIndex(slot);
+            if (index == null) return;
+            if (listMode < 0) {
+                tropifix$warn("Page de la liste des boîtes non reconnue : passe en vue boîte pour sélectionner.");
+                cir.setReturnValue(true);
+                return;
+            }
+            int box = listMode - 1 + index;
+            if (box >= tropifix$boxCount()) { cir.setReturnValue(true); return; }
+            tropifix$dragAdd = !tropifix$isWholeBoxSelected(box);
+            tropifix$selectWholeBox(box, tropifix$dragAdd);
+            tropifix$dragging = true;
+            cir.setReturnValue(true);
+            return;
+        }
+
+        // Un autre élément est sous la souris (menu d'un autre mod...) : on le laisse répondre
+        if (tropifix$otherWidgetAt(mx, my)) return;
+        if (slot == null) return; // clic ailleurs (navigation...) : comportement normal
         Integer index = tropifix$slotIndex(slot);
         if (index == null) return;
-        tropifix$syncBox();
-        tropifix$dragAdd = !tropifix$selection.containsKey(index);
-        tropifix$apply(slot, index);
+        int box = tropifix$currentBox();
+        tropifix$dragAdd = !tropifix$selection.containsKey(tropifix$key(box, index));
+        tropifix$applySlot(box, index);
         tropifix$dragging = true;
         cir.setReturnValue(true);
     }
@@ -145,42 +184,66 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Inject(method = "mouseDragged(DDIDD)Z", at = @At("HEAD"), cancellable = true)
     private void tropifix$onDrag(double mx, double my, int button, double dx, double dy, CallbackInfoReturnable<Boolean> cir) {
         if (!tropifix$multi || !tropifix$dragging || this.storageWidget == null) return;
-        Object slot = tropifix$otherWidgetAt(mx, my) ? null : tropifix$slotAt(mx, my);
+        int listMode = tropifix$listMode();
+        Object slot = tropifix$slotAt(mx, my);
         if (slot != null) {
-            Integer index = tropifix$slotIndex(slot);
-            if (index != null) tropifix$apply(slot, index);
+            if (listMode > 0) {
+                Integer index = tropifix$rawSlotIndex(slot);
+                if (index != null) {
+                    int box = listMode - 1 + index;
+                    if (box < tropifix$boxCount()) tropifix$selectWholeBox(box, tropifix$dragAdd);
+                }
+            } else if (listMode == 0 && !tropifix$otherWidgetAt(mx, my)) {
+                Integer index = tropifix$slotIndex(slot);
+                if (index != null) tropifix$applySlot(tropifix$currentBox(), index);
+            }
         }
         cir.setReturnValue(true);
     }
 
     @Unique
-    private void tropifix$apply(Object slot, int index) {
+    private void tropifix$applySlot(int box, int index) {
+        long key = tropifix$key(box, index);
         if (tropifix$dragAdd) {
-            Pokemon p = tropifix$pokemonOf(slot);
-            if (p != null) tropifix$selection.put(index, p.getUuid());
+            Pokemon p = tropifix$pokemonAt(box, index);
+            if (p != null) tropifix$selection.put(key, p.getUuid());
         } else {
-            tropifix$selection.remove(index);
+            tropifix$selection.remove(key);
+        }
+    }
+
+    /** Ajoute (ou retire) tous les Pokémon d'une boîte, d'après le contenu réel du PC. */
+    @Unique
+    private void tropifix$selectWholeBox(int box, boolean add) {
+        if (this.storageWidget == null || box < 0) return;
+        List<Pokemon> data = tropifix$boxData(box);
+        if (data == null) return;
+        for (int i = 0; i < data.size(); i++) {
+            long key = tropifix$key(box, i);
+            Pokemon p = data.get(i);
+            if (add && p != null) tropifix$selection.put(key, p.getUuid());
+            else tropifix$selection.remove(key);
         }
     }
 
     @Unique
-    private void tropifix$selectAll() {
-        if (this.storageWidget == null) return;
-        tropifix$syncBox();
-        tropifix$selection.clear();
-        List<Pokemon> data = tropifix$boxData(tropifix$selBox);
-        if (data != null) {
-            for (int i = 0; i < data.size(); i++) {
-                Pokemon p = data.get(i);
-                if (p != null) tropifix$selection.put(i, p.getUuid());
-            }
-            return;
+    private boolean tropifix$isWholeBoxSelected(int box) {
+        List<Pokemon> data = tropifix$boxData(box);
+        if (data == null) return false;
+        boolean any = false;
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i) == null) continue;
+            any = true;
+            if (!tropifix$selection.containsKey(tropifix$key(box, i))) return false;
         }
-        for (Object slot : tropifix$boxSlots()) {
-            Integer index = tropifix$slotIndex(slot);
-            Pokemon p = tropifix$pokemonOf(slot);
-            if (index != null && p != null) tropifix$selection.put(index, p.getUuid());
-        }
+        return any;
+    }
+
+    @Unique
+    private int tropifix$selectedInBox(int box) {
+        int n = 0;
+        for (Long k : tropifix$selection.keySet()) if (tropifix$boxOf(k) == box) n++;
+        return n;
     }
 
     // ------------------------------------------------------------------ rendu
@@ -192,15 +255,29 @@ public abstract class PcMultiReleaseMixin extends Screen {
         if (GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) != GLFW.GLFW_PRESS) tropifix$dragging = false;
 
         if (this.storageWidget != null) {
-            tropifix$syncBox();
-            // Retire de la sélection les emplacements vidés ou changés entre-temps (données du PC)
+            // Retire de la sélection les Pokémon qui ne sont plus à leur place (données du PC)
             if (!tropifix$selection.isEmpty()) {
-                tropifix$selection.entrySet().removeIf(e -> tropifix$pokemonAt(tropifix$selBox, e.getKey()) == null
-                    || !tropifix$pokemonAt(tropifix$selBox, e.getKey()).getUuid().equals(e.getValue()));
+                tropifix$selection.entrySet().removeIf(e -> {
+                    Pokemon p = tropifix$pokemonAt(tropifix$boxOf(e.getKey()), tropifix$slotOf(e.getKey()));
+                    return p == null || !p.getUuid().equals(e.getValue());
+                });
+            }
+            if (!tropifix$selection.isEmpty()) {
+                int listMode = tropifix$listMode();
+                int current = tropifix$currentBox();
                 for (Object slot : tropifix$boxSlots()) {
-                    Integer index = tropifix$slotIndex(slot);
-                    if (index == null || !tropifix$selection.containsKey(index)) continue;
-                    if (slot instanceof ClickableWidget w && w.visible) {
+                    if (!(slot instanceof ClickableWidget w) || !w.visible) continue;
+                    Integer raw = tropifix$rawSlotIndex(slot);
+                    if (raw == null) continue;
+                    boolean highlight;
+                    if (listMode > 0) {
+                        highlight = tropifix$selectedInBox(listMode - 1 + raw) > 0;
+                    } else if (listMode == 0) {
+                        highlight = tropifix$selection.containsKey(tropifix$key(current, raw));
+                    } else {
+                        highlight = false;
+                    }
+                    if (highlight) {
                         int x = w.getX(), y = w.getY(), sw = w.getWidth(), sh = w.getHeight();
                         ctx.fill(x, y, x + sw, y + sh, 0x66FF2020);
                         ctx.drawBorder(x, y, sw, sh, 0xFFFF3030);
@@ -211,15 +288,21 @@ public abstract class PcMultiReleaseMixin extends Screen {
 
         tropifix$refreshButtons();
 
+        if (tropifix$warning != null && System.currentTimeMillis() < tropifix$warningUntil && !tropifix$confirming) {
+            int y = Math.max(2, (this.height - GUI_HEIGHT) / 2 - 36);
+            ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§c" + tropifix$warning), this.width / 2, y, 0xFFFFFF);
+        }
+
         if (tropifix$confirming) {
             ctx.fill(0, 0, this.width, this.height, 0xB0000000);
             int n = tropifix$selection.size();
-            String l1 = "Attention, " + n + " Pokémon de la " + tropifix$boxLabel(tropifix$selBox)
+            List<String> names = tropifix$nameLines();
+            String l1 = "Attention, " + n + " Pokémon " + tropifix$boxesLabel()
                 + (n > 1 ? " vont être relâchés :" : " va être relâché :");
-            int y = this.height / 2 - 30 - 10 * Math.min(4, tropifix$nameLines().size());
+            int y = this.height / 2 - 30 - 10 * Math.min(4, names.size());
             ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§c" + l1), this.width / 2, y, 0xFFFFFF);
             y += 14;
-            for (String line : tropifix$nameLines()) {
+            for (String line : names) {
                 ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal("§e" + line), this.width / 2, y, 0xFFFFFF);
                 y += 10;
             }
@@ -232,12 +315,33 @@ public abstract class PcMultiReleaseMixin extends Screen {
         }
     }
 
+    @Unique
+    private void tropifix$warn(String msg) {
+        tropifix$warning = msg;
+        tropifix$warningUntil = System.currentTimeMillis() + 4000;
+    }
+
+    /** « de la boîte 3 (Nom) » ou « des boîtes 3, 5 et 7 ». */
+    @Unique
+    private String tropifix$boxesLabel() {
+        TreeSet<Integer> boxes = new TreeSet<>();
+        for (Long k : tropifix$selection.keySet()) boxes.add(tropifix$boxOf(k));
+        if (boxes.size() == 1) return "de la " + tropifix$boxLabel(boxes.first());
+        List<String> nums = new ArrayList<>();
+        for (int b : boxes) nums.add(String.valueOf(b + 1));
+        if (nums.size() > 12) {
+            return "de " + nums.size() + " boîtes (" + String.join(", ", nums.subList(0, 10)) + "…)";
+        }
+        String last = nums.remove(nums.size() - 1);
+        return "des boîtes " + String.join(", ", nums) + " et " + last;
+    }
+
     /** Noms des Pokémon sélectionnés, regroupés (« Rattata ×3 ») et répartis sur quelques lignes. */
     @Unique
     private List<String> tropifix$nameLines() {
         Map<String, Integer> counts = new LinkedHashMap<>();
-        for (Map.Entry<Integer, UUID> e : tropifix$selection.entrySet()) {
-            Pokemon p = tropifix$pokemonAt(tropifix$selBox, e.getKey());
+        for (Long k : tropifix$selection.keySet()) {
+            Pokemon p = tropifix$pokemonAt(tropifix$boxOf(k), tropifix$slotOf(k));
             if (p == null) continue;
             String name;
             try {
@@ -248,7 +352,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
             if (p.getShiny()) name = name + " ✨";
             counts.merge(name, 1, Integer::sum);
         }
-        List<String> lines = new java.util.ArrayList<>();
+        List<String> lines = new ArrayList<>();
         StringBuilder cur = new StringBuilder();
         int maxWidth = Math.min(this.width - 20, 360);
         for (Map.Entry<String, Integer> c : counts.entrySet()) {
@@ -263,7 +367,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
         }
         if (cur.length() > 0) lines.add(cur.toString());
         if (lines.size() > 6) {
-            List<String> cut = new java.util.ArrayList<>(lines.subList(0, 5));
+            List<String> cut = new ArrayList<>(lines.subList(0, 5));
             cut.add("…");
             return cut;
         }
@@ -275,38 +379,115 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Unique
     private void tropifix$releaseSelected() {
         tropifix$confirming = false;
-        int box = tropifix$selBox;
+        Map<Integer, Integer> perBox = new TreeMap<>();
         int count = 0;
-        for (Map.Entry<Integer, UUID> e : tropifix$selection.entrySet()) {
-            Pokemon now = tropifix$pokemonAt(box, e.getKey());
+        for (Map.Entry<Long, UUID> e : tropifix$selection.entrySet()) {
+            int box = tropifix$boxOf(e.getKey());
+            int slot = tropifix$slotOf(e.getKey());
+            Pokemon now = tropifix$pokemonAt(box, slot);
             if (now == null || !now.getUuid().equals(e.getValue())) continue; // a bougé : on ne touche à rien
             try {
-                new ReleasePCPokemonPacket(e.getValue(), new PCPosition(box, e.getKey())).sendToServer();
+                new ReleasePCPokemonPacket(e.getValue(), new PCPosition(box, slot)).sendToServer();
+                perBox.merge(box + 1, 1, Integer::sum);
                 count++;
             } catch (Throwable t) {
-                TROPIFIX$LOG.warn("[TropiFix] Relâche impossible (boîte {}, emplacement {})", box + 1, e.getKey(), t);
+                TROPIFIX$LOG.warn("[TropiFix] Relâche impossible (boîte {}, emplacement {})", box + 1, slot, t);
             }
         }
-        TROPIFIX$LOG.info("[TropiFix] {} Pokémon relâchés depuis la boîte {}", count, box + 1);
+        TROPIFIX$LOG.info("[TropiFix] {} Pokémon relâchés (par boîte : {})", count, perBox);
         tropifix$selection.clear();
         tropifix$multi = false;
     }
 
+    // ------------------------------------------------------------------ vue liste des boîtes
+
+    /**
+     * 0 = vue boîte normale ; n > 0 = vue liste des boîtes dont la première case est la boîte n
+     * (« Box List 1-30 » -> 1, « Box List 31-60 » -> 31) ; -1 = vue liste dont la page est inconnue.
+     * Le titre est cherché dans les éléments de l'écran et dans les champs du PC.
+     */
+    @Unique
+    private int tropifix$listMode() {
+        boolean sawListButton = false;
+        List<Object> candidates = new ArrayList<>(this.children());
+        candidates.addAll(tropifix$widgetFields(this));
+        if (this.storageWidget != null) candidates.addAll(tropifix$widgetFields(this.storageWidget));
+        for (Object o : candidates) {
+            String text = tropifix$textOf(o);
+            if (text == null || text.isEmpty()) continue;
+            Matcher m = TROPIFIX$LIST_RANGE.matcher(text);
+            if (m.find()) {
+                try {
+                    return Math.max(1, Integer.parseInt(m.group(1)));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            // Le bouton « Box View » n'apparaît que dans la vue liste
+            if (text.trim().equalsIgnoreCase("Box View") || text.trim().equalsIgnoreCase("Vue boîte")) sawListButton = true;
+        }
+        return sawListButton ? -1 : 0;
+    }
+
+    @Unique
+    private static String tropifix$textOf(Object o) {
+        try {
+            if (o instanceof TextFieldWidget tf) {
+                String t = tf.getText();
+                if (t != null && !t.isEmpty()) return t;
+            }
+            if (o instanceof ClickableWidget w) {
+                if (!w.visible) return null;
+                return w.getMessage().getString();
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    @Unique private static final Map<Class<?>, List<Field>> TROPIFIX$WIDGET_FIELDS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Widgets rangés dans les champs d'un objet (titre de boîte, boutons...), toutes classes parentes comprises. */
+    @Unique
+    private static List<Object> tropifix$widgetFields(Object owner) {
+        List<Field> fields = TROPIFIX$WIDGET_FIELDS.computeIfAbsent(owner.getClass(), c -> {
+            List<Field> out = new ArrayList<>();
+            for (Class<?> k = c; k != null && k != Object.class; k = k.getSuperclass()) {
+                for (Field f : k.getDeclaredFields()) {
+                    if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+                    if (!ClickableWidget.class.isAssignableFrom(f.getType())) continue;
+                    try {
+                        f.setAccessible(true);
+                        out.add(f);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+            return out;
+        });
+        List<Object> values = new ArrayList<>();
+        for (Field f : fields) {
+            try {
+                Object v = f.get(owner);
+                if (v != null) values.add(v);
+            } catch (Throwable ignored) {
+            }
+        }
+        return values;
+    }
+
     // ------------------------------------------------------------------ accès au widget du PC
 
-    /** Vide la sélection si la boîte affichée a changé. */
     @Unique
-    private void tropifix$syncBox() {
-        int box = tropifix$currentBox();
-        if (box != tropifix$selBox) {
-            tropifix$selBox = box;
-            tropifix$selection.clear();
-            tropifix$confirming = false;
+    private boolean tropifix$isOwnButton(double mx, double my) {
+        for (ButtonWidget b : new ButtonWidget[]{tropifix$toggleBtn, tropifix$allBtn, tropifix$releaseBtn}) {
+            if (b != null && b.visible && b.isMouseOver(mx, my)) return true;
         }
+        return false;
     }
 
     @Unique private static Method tropifix$getBox;
     @Unique private static Field tropifix$boxSlotsField;
+    @Unique private static Field tropifix$pcField;
 
     @Unique
     private int tropifix$currentBox() {
@@ -335,11 +516,22 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Unique
     private Object tropifix$slotAt(double mx, double my) {
         for (Object slot : tropifix$boxSlots()) {
-            if (slot instanceof ClickableWidget w && w.visible
+            if (slot instanceof ClickableWidget w
                     && mx >= w.getX() && mx < w.getX() + w.getWidth()
                     && my >= w.getY() && my < w.getY() + w.getHeight()) {
                 return slot;
             }
+        }
+        return null;
+    }
+
+    /** Numéro de la case (0 à 29), quelle que soit la boîte. */
+    @Unique
+    private static Integer tropifix$rawSlotIndex(Object slot) {
+        try {
+            Object pos = slot.getClass().getMethod("getPosition").invoke(slot);
+            if (pos instanceof PCPosition p) return p.getSlot();
+        } catch (Throwable ignored) {
         }
         return null;
     }
@@ -355,10 +547,10 @@ public abstract class PcMultiReleaseMixin extends Screen {
         return null;
     }
 
-    /** Vrai si un élément de l'écran autre que le PC lui-même (liste des boîtes, autre mod...) est sous la souris. */
+    /** Vrai si un élément de l'écran autre que le PC lui-même (menu d'un autre mod...) est sous la souris. */
     @Unique
     private boolean tropifix$otherWidgetAt(double mx, double my) {
-        for (net.minecraft.client.gui.Element el : this.children()) {
+        for (Element el : this.children()) {
             if (el == this.storageWidget || el == tropifix$toggleBtn || el == tropifix$allBtn
                 || el == tropifix$releaseBtn || el == tropifix$yesBtn || el == tropifix$noBtn) continue;
             if (el instanceof com.cobblemon.mod.common.client.gui.pc.StorageSlot) continue;
@@ -371,11 +563,8 @@ public abstract class PcMultiReleaseMixin extends Screen {
         return false;
     }
 
-    @Unique private static Field tropifix$pcField;
-
-    /** Contenu réel de la boîte (données du PC côté client), null si illisible. */
     @Unique
-    private List<Pokemon> tropifix$boxData(int box) {
+    private List<?> tropifix$boxes() {
         try {
             if (tropifix$pcField == null) {
                 tropifix$pcField = StorageWidget.class.getDeclaredField("pc");
@@ -383,11 +572,28 @@ public abstract class PcMultiReleaseMixin extends Screen {
             }
             Object pc = tropifix$pcField.get(this.storageWidget);
             Object boxes = pc.getClass().getMethod("getBoxes").invoke(pc);
-            if (!(boxes instanceof List<?> l) || box < 0 || box >= l.size()) return null;
+            if (boxes instanceof List<?> l) return l;
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    @Unique
+    private int tropifix$boxCount() {
+        List<?> l = tropifix$boxes();
+        return l == null ? 0 : l.size();
+    }
+
+    /** Contenu réel de la boîte (données du PC côté client), null si illisible. */
+    @Unique
+    private List<Pokemon> tropifix$boxData(int box) {
+        try {
+            List<?> l = tropifix$boxes();
+            if (l == null || box < 0 || box >= l.size()) return null;
             Object b = l.get(box);
             Object slots = b.getClass().getMethod("getSlots").invoke(b);
             if (!(slots instanceof List<?> sl)) return null;
-            List<Pokemon> out = new java.util.ArrayList<>(sl.size());
+            List<Pokemon> out = new ArrayList<>(sl.size());
             for (Object o : sl) out.add(o instanceof Pokemon pk ? pk : null);
             return out;
         } catch (Throwable t) {
@@ -398,13 +604,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Unique
     private Pokemon tropifix$pokemonAt(int box, int slot) {
         List<Pokemon> data = tropifix$boxData(box);
-        if (data != null) return slot >= 0 && slot < data.size() ? data.get(slot) : null;
-        if (box != tropifix$currentBox()) return null;
-        for (Object s : tropifix$boxSlots()) {
-            Integer i = tropifix$slotIndex(s);
-            if (i != null && i == slot) return tropifix$pokemonOf(s);
-        }
-        return null;
+        return data != null && slot >= 0 && slot < data.size() ? data.get(slot) : null;
     }
 
     /** « boîte 3 » ou « boîte 3 (Shiny) » si la boîte a un nom. */
@@ -412,9 +612,9 @@ public abstract class PcMultiReleaseMixin extends Screen {
     private String tropifix$boxLabel(int box) {
         String label = "boîte " + (box + 1);
         try {
-            Object pc = tropifix$pcField == null ? null : tropifix$pcField.get(this.storageWidget);
-            if (pc != null) {
-                Object b = ((List<?>) pc.getClass().getMethod("getBoxes").invoke(pc)).get(box);
+            List<?> l = tropifix$boxes();
+            if (l != null && box >= 0 && box < l.size()) {
+                Object b = l.get(box);
                 Object name = b.getClass().getMethod("getName").invoke(b);
                 String n = name instanceof Text t ? t.getString() : (name == null ? "" : String.valueOf(name));
                 if (!n.isBlank()) label += " (" + n + ")";
@@ -422,15 +622,5 @@ public abstract class PcMultiReleaseMixin extends Screen {
         } catch (Throwable ignored) {
         }
         return label;
-    }
-
-    @Unique
-    private static Pokemon tropifix$pokemonOf(Object slot) {
-        try {
-            Object p = slot.getClass().getMethod("getPokemon").invoke(slot);
-            return p instanceof Pokemon pk ? pk : null;
-        } catch (Throwable ignored) {
-            return null;
-        }
     }
 }
