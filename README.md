@@ -39,6 +39,11 @@ dans un rayon de 96 blocs. Desactivee a chaque lancement ; la touche
 "Paturages : activer / desactiver" (Options > Controles, categorie TropiFix, non assignee
 par defaut) l'allume ou l'eteint.
 
+## Sons coupes
+
+Les sons des distributeurs / droppers (tir, lancer, clic a vide) et des wagonnets en
+mouvement (roulement, interieur) sont coupes ; les autres sons de blocs restent normaux.
+
 ## Build
 
 Compile via GitHub Actions a chaque push sur `main`. Le jar se recupere dans
