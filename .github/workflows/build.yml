@@ -45,6 +45,13 @@ jobs:
           fi
         shell: bash
 
+      - name: Inspecter le package pc (affiché dans le log)
+        if: always()
+        run: |
+          cd /tmp/pcgui 2>/dev/null || exit 0
+          for f in com/cobblemon/mod/common/client/gui/pc/*.class; do echo "=== $f"; javap -p "$f"; done
+        shell: bash
+
       - name: Pousser le log en cas d'echec
         if: failure()
         run: |
