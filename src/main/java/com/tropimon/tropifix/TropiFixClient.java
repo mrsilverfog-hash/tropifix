@@ -1,6 +1,5 @@
 package com.tropimon.tropifix;
 
-import com.tropimon.tropifix.pasture.PastureBeacon;
 import com.tropimon.tropifix.timer.EventTimer;
 import net.fabricmc.api.ClientModInitializer;
 
@@ -9,6 +8,5 @@ public class TropiFixClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         EventTimer.register();
-        PastureBeacon.register();
     }
 }
