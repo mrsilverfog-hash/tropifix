@@ -1,0 +1,485 @@
+=== com/cobblemon/mod/common/client/gui/pc/BoxNameWidget.class
+Compiled from "BoxNameWidget.java"
+public final class com.cobblemon.mod.common.client.gui.pc.BoxNameWidget extends com.cobblemon.mod.common.client.gui.pc.TextWidget {
+  private final com.cobblemon.mod.common.client.gui.pc.PCGUI pcGui;
+  private final com.cobblemon.mod.common.client.gui.pc.StorageWidget storageWidget;
+  public com.cobblemon.mod.common.client.gui.pc.BoxNameWidget(int, int, net.minecraft.class_2561, com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.client.gui.pc.StorageWidget);
+  public com.cobblemon.mod.common.client.gui.pc.BoxNameWidget(int, int, net.minecraft.class_2561, com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.client.gui.pc.StorageWidget, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public void method_48579(net.minecraft.class_332, int, int, float);
+  public void method_25365(boolean);
+  public boolean method_25404(int, int, int);
+  public void unfocused();
+  public final com.cobblemon.mod.common.client.storage.ClientBox getBox();
+  public final net.minecraft.class_5250 defaultBoxLabel();
+  private static final kotlin.Unit _init_$lambda$0();
+}
+=== com/cobblemon/mod/common/client/gui/pc/BoxStorageSlot.class
+Compiled from "BoxStorageSlot.java"
+public final class com.cobblemon.mod.common.client.gui.pc.BoxStorageSlot extends com.cobblemon.mod.common.client.gui.pc.StorageSlot {
+  private final com.cobblemon.mod.common.client.gui.pc.StorageWidget parent;
+  private final com.cobblemon.mod.common.client.storage.ClientPC pc;
+  private final com.cobblemon.mod.common.api.storage.pc.PCPosition position;
+  public com.cobblemon.mod.common.client.gui.pc.BoxStorageSlot(int, int, com.cobblemon.mod.common.client.gui.pc.StorageWidget, com.cobblemon.mod.common.client.storage.ClientPC, com.cobblemon.mod.common.api.storage.pc.PCPosition, net.minecraft.class_4185$class_4241);
+  public final com.cobblemon.mod.common.api.storage.pc.PCPosition getPosition();
+  public com.cobblemon.mod.common.pokemon.Pokemon getPokemon();
+  public boolean shouldRender();
+}
+=== com/cobblemon/mod/common/client/gui/pc/FilterWidget$Companion.class
+Compiled from "FilterWidget.java"
+public final class com.cobblemon.mod.common.client.gui.pc.FilterWidget$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.FilterWidget$Companion();
+  public com.cobblemon.mod.common.client.gui.pc.FilterWidget$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/FilterWidget.class
+Compiled from "FilterWidget.java"
+public final class com.cobblemon.mod.common.client.gui.pc.FilterWidget extends com.cobblemon.mod.common.client.gui.pc.TextWidget {
+  public static final com.cobblemon.mod.common.client.gui.pc.FilterWidget$Companion Companion;
+  private int pX;
+  private int pY;
+  public static final int ICON_SIZE;
+  public static final float SCALE;
+  private static final net.minecraft.class_2960 iconFilterResource;
+  private static final net.minecraft.class_5250 labelFilter;
+  public com.cobblemon.mod.common.client.gui.pc.FilterWidget(int, int, net.minecraft.class_2561, kotlin.jvm.functions.Function0<kotlin.Unit>);
+  public com.cobblemon.mod.common.client.gui.pc.FilterWidget(int, int, net.minecraft.class_2561, kotlin.jvm.functions.Function0, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public void method_48579(net.minecraft.class_332, int, int, float);
+  public boolean method_25402(double, double, int);
+  public final boolean iconHovered(int, int);
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/GrabbedStorageSlot.class
+Compiled from "GrabbedStorageSlot.java"
+public final class com.cobblemon.mod.common.client.gui.pc.GrabbedStorageSlot extends com.cobblemon.mod.common.client.gui.pc.StorageSlot {
+  private final com.cobblemon.mod.common.pokemon.Pokemon pokemon;
+  public com.cobblemon.mod.common.client.gui.pc.GrabbedStorageSlot(int, int, com.cobblemon.mod.common.client.gui.pc.StorageWidget, com.cobblemon.mod.common.pokemon.Pokemon);
+  protected void method_48579(net.minecraft.class_332, int, int, float);
+  public boolean isStationary();
+  public com.cobblemon.mod.common.pokemon.Pokemon getPokemon();
+  public boolean method_25367();
+  public boolean shouldRender();
+  private static final void _init_$lambda$0(net.minecraft.class_4185);
+}
+=== com/cobblemon/mod/common/client/gui/pc/IconButton$Companion.class
+Compiled from "IconButton.java"
+public final class com.cobblemon.mod.common.client.gui.pc.IconButton$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.IconButton$Companion();
+  public com.cobblemon.mod.common.client.gui.pc.IconButton$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/IconButton.class
+Compiled from "IconButton.java"
+public final class com.cobblemon.mod.common.client.gui.pc.IconButton extends net.minecraft.class_4185 implements com.cobblemon.mod.common.client.gui.CobblemonRenderable {
+  public static final com.cobblemon.mod.common.client.gui.pc.IconButton$Companion Companion;
+  private final int buttonWidth;
+  private final int buttonHeight;
+  private final net.minecraft.class_2960 resource;
+  private final net.minecraft.class_2960 altResource;
+  private final java.lang.String tooltipKey;
+  private boolean highlighted;
+  private boolean showAlt;
+  private static final float SCALE;
+  public com.cobblemon.mod.common.client.gui.pc.IconButton(int, int, int, int, net.minecraft.class_2960, net.minecraft.class_2960, java.lang.String, java.lang.String, net.minecraft.class_4185$class_4241);
+  public com.cobblemon.mod.common.client.gui.pc.IconButton(int, int, int, int, net.minecraft.class_2960, net.minecraft.class_2960, java.lang.String, java.lang.String, net.minecraft.class_4185$class_4241, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final int getButtonWidth();
+  public final int getButtonHeight();
+  public final net.minecraft.class_2960 getResource();
+  public final net.minecraft.class_2960 getAltResource();
+  public final java.lang.String getTooltipKey();
+  public final boolean getHighlighted();
+  public final void setHighlighted(boolean);
+  public final boolean getShowAlt();
+  public final void setShowAlt(boolean);
+  protected void method_48579(net.minecraft.class_332, int, int, float);
+  public void method_25354(net.minecraft.class_1144);
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/NavigationButton$Companion.class
+Compiled from "NavigationButton.java"
+public final class com.cobblemon.mod.common.client.gui.pc.NavigationButton$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.NavigationButton$Companion();
+  public com.cobblemon.mod.common.client.gui.pc.NavigationButton$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/NavigationButton.class
+Compiled from "NavigationButton.java"
+public final class com.cobblemon.mod.common.client.gui.pc.NavigationButton extends net.minecraft.class_4185 implements com.cobblemon.mod.common.client.gui.CobblemonRenderable {
+  public static final com.cobblemon.mod.common.client.gui.pc.NavigationButton$Companion Companion;
+  private final boolean forward;
+  private static final int SIZE;
+  private static final float SCALE;
+  private static final net.minecraft.class_2960 forwardButtonResource;
+  private static final net.minecraft.class_2960 backwardsButtonResource;
+  public com.cobblemon.mod.common.client.gui.pc.NavigationButton(int, int, boolean, net.minecraft.class_4185$class_4241);
+  protected void method_48579(net.minecraft.class_332, int, int, float);
+  public void method_25354(net.minecraft.class_1144);
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/PCGUI$Companion.class
+Compiled from "PCGUI.java"
+public final class com.cobblemon.mod.common.client.gui.pc.PCGUI$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.PCGUI$Companion();
+  public com.cobblemon.mod.common.client.gui.pc.PCGUI$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/PCGUI.class
+Compiled from "PCGUI.java"
+public final class com.cobblemon.mod.common.client.gui.pc.PCGUI extends net.minecraft.class_437 implements com.cobblemon.mod.common.client.gui.CobblemonRenderable {
+  public static final com.cobblemon.mod.common.client.gui.pc.PCGUI$Companion Companion;
+  private final com.cobblemon.mod.common.client.storage.ClientPC pc;
+  private final com.cobblemon.mod.common.client.storage.ClientParty party;
+  private final com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration configuration;
+  private final int openOnBox;
+  private final java.util.Set<net.minecraft.class_2960> unseenWallpapers;
+  private com.cobblemon.mod.common.client.gui.pc.StorageWidget storageWidget;
+  private com.cobblemon.mod.common.client.gui.pc.BoxNameWidget boxNameWidget;
+  private com.cobblemon.mod.common.client.gui.pc.FilterWidget filterWidget;
+  private com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget wallpaperWidget;
+  private com.cobblemon.mod.common.client.gui.summary.widgets.MarkingsWidget markingsWidget;
+  private com.cobblemon.mod.common.client.gui.summary.widgets.ModelWidget modelWidget;
+  private com.cobblemon.mod.common.pokemon.Pokemon previewPokemon;
+  private java.lang.Boolean isPreviewInParty;
+  private boolean showCosmeticItem;
+  private int currentStatIndex;
+  private final java.util.List<com.cobblemon.mod.common.client.gui.pc.IconButton> optionButtons;
+  private com.cobblemon.mod.common.api.storage.pc.search.Search search;
+  private int ticksElapsed;
+  private int selectPointerOffsetY;
+  private boolean selectPointerOffsetIncrement;
+  private boolean displayOptions;
+  public static final int BASE_WIDTH;
+  public static final int BASE_HEIGHT;
+  public static final int INFO_BOX_WIDTH;
+  public static final int INFO_BOX_HEIGHT;
+  public static final int RIGHT_PANEL_WIDTH;
+  public static final int RIGHT_PANEL_HEIGHT;
+  public static final int TYPE_SPACER_WIDTH;
+  public static final int TYPE_SPACER_HEIGHT;
+  public static final int PC_SPACER_WIDTH;
+  public static final int PC_SPACER_HEIGHT;
+  public static final int PORTRAIT_SIZE;
+  public static final float SCALE;
+  public static final int STAT_INFO;
+  public static final int STAT_IV;
+  public static final int STAT_EV;
+  private static final net.minecraft.class_5250[] statLabels;
+  private static final com.cobblemon.mod.common.api.pokemon.stats.Stats[] stats;
+  private static final net.minecraft.class_2960 baseResource;
+  private static final net.minecraft.class_2960 portraitBackgroundResource;
+  private static final net.minecraft.class_2960 infoBoxResource;
+  private static final net.minecraft.class_2960 infoBoxStatResource;
+  private static final net.minecraft.class_2960 buttonOptionsResource;
+  private static final net.minecraft.class_2960 buttonWallpaperResource;
+  private static final net.minecraft.class_2960 buttonInfoArrow;
+  private static final net.minecraft.class_2960 topSpacerResource;
+  private static final net.minecraft.class_2960 bottomSpacerResource;
+  private static final net.minecraft.class_2960 rightSpacerResource;
+  private static final net.minecraft.class_2960 typeSpacerResource;
+  private static final net.minecraft.class_2960 typeSpacerSingleResource;
+  private static final net.minecraft.class_2960 typeSpacerDoubleResource;
+  public com.cobblemon.mod.common.client.gui.pc.PCGUI(com.cobblemon.mod.common.client.storage.ClientPC, com.cobblemon.mod.common.client.storage.ClientParty, com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration, int, java.util.Set<net.minecraft.class_2960>);
+  public com.cobblemon.mod.common.client.gui.pc.PCGUI(com.cobblemon.mod.common.client.storage.ClientPC, com.cobblemon.mod.common.client.storage.ClientParty, com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration, int, java.util.Set, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final com.cobblemon.mod.common.client.storage.ClientPC getPc();
+  public final com.cobblemon.mod.common.client.storage.ClientParty getParty();
+  public final com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration getConfiguration();
+  public final int getOpenOnBox();
+  public final java.util.Set<net.minecraft.class_2960> getUnseenWallpapers();
+  public final com.cobblemon.mod.common.client.gui.pc.StorageWidget getStorage();
+  public final com.cobblemon.mod.common.pokemon.Pokemon getPreviewPokemon$common();
+  public final void setPreviewPokemon$common(com.cobblemon.mod.common.pokemon.Pokemon);
+  public final java.lang.Boolean isPreviewInParty();
+  public final void setPreviewInParty(java.lang.Boolean);
+  public final com.cobblemon.mod.common.api.storage.pc.search.Search getSearch();
+  public final void setSearch(com.cobblemon.mod.common.api.storage.pc.search.Search);
+  public final int getTicksElapsed();
+  public final void setTicksElapsed(int);
+  public final int getSelectPointerOffsetY();
+  public final void setSelectPointerOffsetY(int);
+  public final boolean getSelectPointerOffsetIncrement();
+  public final void setSelectPointerOffsetIncrement(boolean);
+  public final boolean getDisplayOptions();
+  public final void setDisplayOptions(boolean);
+  protected void method_57734(float);
+  protected void method_57735(net.minecraft.class_332);
+  protected void method_25426();
+  public void method_25394(net.minecraft.class_332, int, int, float);
+  public final void closeNormally(boolean);
+  public static void closeNormally$default(com.cobblemon.mod.common.client.gui.pc.PCGUI, boolean, int, java.lang.Object);
+  public boolean method_25402(double, double, int);
+  public boolean method_25401(double, double, double, double);
+  public boolean method_25403(double, double, int, double, double);
+  public boolean method_25404(int, int, int);
+  public boolean method_25421();
+  public void method_25393();
+  public final void playSound(net.minecraft.class_3414);
+  private final void saveMarkings(boolean);
+  static void saveMarkings$default(com.cobblemon.mod.common.client.gui.pc.PCGUI, boolean, int, java.lang.Object);
+  public final void setPreviewPokemon(com.cobblemon.mod.common.pokemon.Pokemon, boolean);
+  public static void setPreviewPokemon$default(com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.pokemon.Pokemon, boolean, int, java.lang.Object);
+  private static final void init$lambda$0(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$1(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$2(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final kotlin.Unit init$lambda$3(com.cobblemon.mod.common.client.gui.pc.PCGUI);
+  private static final void init$lambda$4(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$7(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$9$0(com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.api.pokemon.PokemonSortMode, net.minecraft.class_4185);
+  private static final void init$lambda$10(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  private static final void init$lambda$11(com.cobblemon.mod.common.client.gui.pc.PCGUI, net.minecraft.class_4185);
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/PCGUIConfiguration.class
+Compiled from "PCGUIConfiguration.java"
+public class com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration {
+  private final kotlin.jvm.functions.Function1<com.cobblemon.mod.common.client.gui.pc.PCGUI, kotlin.Unit> exitFunction;
+  private final kotlin.jvm.functions.Function3<com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.api.storage.StorePosition, com.cobblemon.mod.common.pokemon.Pokemon, kotlin.Unit> selectOverride;
+  private boolean showParty;
+  private final kotlin.jvm.functions.Function1<com.cobblemon.mod.common.pokemon.Pokemon, java.lang.Boolean> canSelect;
+  public com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration(kotlin.jvm.functions.Function1<? super com.cobblemon.mod.common.client.gui.pc.PCGUI, kotlin.Unit>, kotlin.jvm.functions.Function3<? super com.cobblemon.mod.common.client.gui.pc.PCGUI, ? super com.cobblemon.mod.common.api.storage.StorePosition, ? super com.cobblemon.mod.common.pokemon.Pokemon, kotlin.Unit>, boolean, kotlin.jvm.functions.Function1<? super com.cobblemon.mod.common.pokemon.Pokemon, java.lang.Boolean>);
+  public com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration(kotlin.jvm.functions.Function1, kotlin.jvm.functions.Function3, boolean, kotlin.jvm.functions.Function1, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final kotlin.jvm.functions.Function1<com.cobblemon.mod.common.client.gui.pc.PCGUI, kotlin.Unit> getExitFunction();
+  public final kotlin.jvm.functions.Function3<com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.api.storage.StorePosition, com.cobblemon.mod.common.pokemon.Pokemon, kotlin.Unit> getSelectOverride();
+  public final boolean getShowParty();
+  public final void setShowParty(boolean);
+  public final kotlin.jvm.functions.Function1<com.cobblemon.mod.common.pokemon.Pokemon, java.lang.Boolean> getCanSelect();
+  private static final kotlin.Unit _init_$lambda$0(com.cobblemon.mod.common.client.gui.pc.PCGUI);
+  private static final boolean _init_$lambda$1(com.cobblemon.mod.common.pokemon.Pokemon);
+  public com.cobblemon.mod.common.client.gui.pc.PCGUIConfiguration();
+}
+=== com/cobblemon/mod/common/client/gui/pc/PartyStorageSlot.class
+Compiled from "PartyStorageSlot.java"
+public final class com.cobblemon.mod.common.client.gui.pc.PartyStorageSlot extends com.cobblemon.mod.common.client.gui.pc.StorageSlot {
+  private final com.cobblemon.mod.common.client.gui.pc.StorageWidget parent;
+  private final com.cobblemon.mod.common.client.storage.ClientParty party;
+  private final com.cobblemon.mod.common.api.storage.party.PartyPosition position;
+  public com.cobblemon.mod.common.client.gui.pc.PartyStorageSlot(int, int, com.cobblemon.mod.common.client.gui.pc.StorageWidget, com.cobblemon.mod.common.client.storage.ClientParty, com.cobblemon.mod.common.api.storage.party.PartyPosition, net.minecraft.class_4185$class_4241);
+  public final com.cobblemon.mod.common.api.storage.party.PartyPosition getPosition();
+  public com.cobblemon.mod.common.pokemon.Pokemon getPokemon();
+  public boolean shouldRender();
+  public boolean clickable();
+}
+=== com/cobblemon/mod/common/client/gui/pc/ReleaseButton$Companion.class
+Compiled from "ReleaseButton.java"
+public final class com.cobblemon.mod.common.client.gui.pc.ReleaseButton$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.ReleaseButton$Companion();
+  public com.cobblemon.mod.common.client.gui.pc.ReleaseButton$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/ReleaseButton.class
+Compiled from "ReleaseButton.java"
+public final class com.cobblemon.mod.common.client.gui.pc.ReleaseButton extends net.minecraft.class_4185 implements com.cobblemon.mod.common.client.gui.CobblemonRenderable {
+  public static final com.cobblemon.mod.common.client.gui.pc.ReleaseButton$Companion Companion;
+  private final com.cobblemon.mod.common.client.gui.pc.StorageWidget parent;
+  private static final int WIDTH;
+  private static final int HEIGHT;
+  private static final net.minecraft.class_2960 buttonResource;
+  public com.cobblemon.mod.common.client.gui.pc.ReleaseButton(int, int, com.cobblemon.mod.common.client.gui.pc.StorageWidget, net.minecraft.class_4185$class_4241);
+  protected void method_48579(net.minecraft.class_332, int, int, float);
+  public void method_25354(net.minecraft.class_1144);
+  public final boolean isHovered(double, double);
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/ReleaseConfirmButton$Companion.class
+Compiled from "ReleaseConfirmButton.java"
+public final class com.cobblemon.mod.common.client.gui.pc.ReleaseConfirmButton$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.ReleaseConfirmButton$Companion();
+  public com.cobblemon.mod.common.client.gui.pc.ReleaseConfirmButton$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/ReleaseConfirmButton.class
+Compiled from "ReleaseConfirmButton.java"
+public final class com.cobblemon.mod.common.client.gui.pc.ReleaseConfirmButton extends net.minecraft.class_4185 implements com.cobblemon.mod.common.client.gui.CobblemonRenderable {
+  public static final com.cobblemon.mod.common.client.gui.pc.ReleaseConfirmButton$Companion Companion;
+  private final com.cobblemon.mod.common.client.gui.pc.StorageWidget parent;
+  private final java.lang.String subKey;
+  private static final int WIDTH;
+  private static final int HEIGHT;
+  private static final net.minecraft.class_2960 buttonResource;
+  public com.cobblemon.mod.common.client.gui.pc.ReleaseConfirmButton(int, int, com.cobblemon.mod.common.client.gui.pc.StorageWidget, java.lang.String, net.minecraft.class_4185$class_4241);
+  protected void method_48579(net.minecraft.class_332, int, int, float);
+  public void method_25354(net.minecraft.class_1144);
+  public final boolean isHovered(double, double);
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/StorageSlot$Companion.class
+Compiled from "StorageSlot.java"
+public final class com.cobblemon.mod.common.client.gui.pc.StorageSlot$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.StorageSlot$Companion();
+  public com.cobblemon.mod.common.client.gui.pc.StorageSlot$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/StorageSlot$WhenMappings.class
+Compiled from "StorageSlot.java"
+public final class com.cobblemon.mod.common.client.gui.pc.StorageSlot$WhenMappings {
+  public static final int[] $EnumSwitchMapping$0;
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/StorageSlot.class
+Compiled from "StorageSlot.java"
+public class com.cobblemon.mod.common.client.gui.pc.StorageSlot extends net.minecraft.class_4185 implements com.cobblemon.mod.common.client.gui.CobblemonRenderable {
+  public static final com.cobblemon.mod.common.client.gui.pc.StorageSlot$Companion Companion;
+  private final com.cobblemon.mod.common.client.gui.pc.StorageWidget parent;
+  private final com.cobblemon.mod.common.client.render.models.blockbench.FloatingState state;
+  private boolean isSlotSelected;
+  public static final int SIZE;
+  private static final net.minecraft.class_2960 genderIconMale;
+  private static final net.minecraft.class_2960 genderIconFemale;
+  private static final net.minecraft.class_2960 selectPointerResource;
+  private static final net.minecraft.class_2960 slotOverlayResource;
+  private static final net.minecraft.class_2960 slotOverlayPastureIconResource;
+  private static final net.minecraft.class_2960 slotOverlayMoveIconResource;
+  public com.cobblemon.mod.common.client.gui.pc.StorageSlot(int, int, com.cobblemon.mod.common.client.gui.pc.StorageWidget, net.minecraft.class_4185$class_4241);
+  public final com.cobblemon.mod.common.client.render.models.blockbench.FloatingState getState();
+  protected final boolean isSlotSelected();
+  protected final void setSlotSelected(boolean);
+  public void method_25354(net.minecraft.class_1144);
+  protected void method_48579(net.minecraft.class_332, int, int, float);
+  public final void renderSlot(net.minecraft.class_332, int, int, float);
+  public boolean isStationary();
+  public com.cobblemon.mod.common.pokemon.Pokemon getPokemon();
+  public boolean method_25367();
+  public boolean shouldRender();
+  public boolean clickable();
+  public boolean method_25402(double, double, int);
+  public final boolean isHovered(int, int);
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/StorageWidget$Companion.class
+Compiled from "StorageWidget.java"
+public final class com.cobblemon.mod.common.client.gui.pc.StorageWidget$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.StorageWidget$Companion();
+  public com.cobblemon.mod.common.client.gui.pc.StorageWidget$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/StorageWidget.class
+Compiled from "StorageWidget.java"
+public final class com.cobblemon.mod.common.client.gui.pc.StorageWidget extends com.cobblemon.mod.common.client.gui.summary.widgets.SoundlessWidget {
+  public static final com.cobblemon.mod.common.client.gui.pc.StorageWidget$Companion Companion;
+  private final com.cobblemon.mod.common.client.gui.pc.PCGUI pcGui;
+  private final com.cobblemon.mod.common.client.storage.ClientPC pc;
+  private final com.cobblemon.mod.common.client.storage.ClientParty party;
+  private final java.util.ArrayList<com.cobblemon.mod.common.client.gui.pc.PartyStorageSlot> partySlots;
+  private final java.util.ArrayList<com.cobblemon.mod.common.client.gui.pc.BoxStorageSlot> boxSlots;
+  private final com.cobblemon.mod.common.client.gui.pc.ReleaseButton releaseButton;
+  private final com.cobblemon.mod.common.client.gui.pc.ReleaseConfirmButton releaseYesButton;
+  private final com.cobblemon.mod.common.client.gui.pc.ReleaseConfirmButton releaseNoButton;
+  private com.cobblemon.mod.common.client.gui.pasture.PastureWidget pastureWidget;
+  private boolean displayConfirmRelease;
+  private boolean screenLoaded;
+  private com.cobblemon.mod.common.api.storage.StorePosition selectedPosition;
+  private com.cobblemon.mod.common.client.gui.pc.GrabbedStorageSlot grabbedSlot;
+  private int box;
+  public static final int WIDTH;
+  public static final int HEIGHT;
+  public static final int SCREEN_WIDTH;
+  public static final int SCREEN_HEIGHT;
+  public static final int BOX_SLOT_START_OFFSET_X;
+  public static final int BOX_SLOT_START_OFFSET_Y;
+  public static final int PARTY_SLOT_START_OFFSET_X;
+  public static final int PARTY_SLOT_START_OFFSET_Y;
+  public static final int BOX_SLOT_PADDING;
+  public static final int PARTY_SLOT_PADDING;
+  private static final net.minecraft.class_2960 partyPanelResource;
+  private static final net.minecraft.class_2960 screenOverlayResource;
+  private static final net.minecraft.class_2960 screenGridResource;
+  private static final net.minecraft.class_2960 screenGlowResource;
+  public com.cobblemon.mod.common.client.gui.pc.StorageWidget(int, int, com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.client.storage.ClientPC, com.cobblemon.mod.common.client.storage.ClientParty);
+  public final com.cobblemon.mod.common.client.gui.pc.PCGUI getPcGui();
+  public final com.cobblemon.mod.common.client.gui.pasture.PastureWidget getPastureWidget();
+  public final void setPastureWidget(com.cobblemon.mod.common.client.gui.pasture.PastureWidget);
+  public final boolean getDisplayConfirmRelease();
+  public final void setDisplayConfirmRelease(boolean);
+  public final boolean getScreenLoaded();
+  public final void setScreenLoaded(boolean);
+  public final com.cobblemon.mod.common.api.storage.StorePosition getSelectedPosition();
+  public final void setSelectedPosition(com.cobblemon.mod.common.api.storage.StorePosition);
+  public final com.cobblemon.mod.common.client.gui.pc.GrabbedStorageSlot getGrabbedSlot();
+  public final void setGrabbedSlot(com.cobblemon.mod.common.client.gui.pc.GrabbedStorageSlot);
+  public final int getBox();
+  public final void setBox(int);
+  public final boolean canDeleteSelected();
+  public final void setupStorageSlots();
+  private final com.cobblemon.mod.common.pokemon.Pokemon getSelectedPokemon();
+  protected void method_48579(net.minecraft.class_332, int, int, float);
+  public boolean method_25402(double, double, int);
+  private final void resetStorageSlots();
+  private final void playSound(net.minecraft.class_3414);
+  private final void onStorageSlotClicked(net.minecraft.class_4185);
+  public final void resetSelected();
+  private static final void _init_$lambda$0(com.cobblemon.mod.common.client.gui.pc.StorageWidget, net.minecraft.class_4185);
+  private static final void _init_$lambda$1(com.cobblemon.mod.common.client.gui.pc.StorageWidget, net.minecraft.class_4185);
+  private static final void _init_$lambda$2(com.cobblemon.mod.common.client.gui.pc.StorageWidget, net.minecraft.class_4185);
+  private static final void setupStorageSlots$lambda$0(com.cobblemon.mod.common.client.gui.pc.StorageWidget, net.minecraft.class_4185);
+  private static final void setupStorageSlots$lambda$2(com.cobblemon.mod.common.client.gui.pc.StorageWidget, net.minecraft.class_4185);
+  static {};
+}
+=== com/cobblemon/mod/common/client/gui/pc/TextWidget.class
+Compiled from "TextWidget.java"
+public abstract class com.cobblemon.mod.common.client.gui.pc.TextWidget extends net.minecraft.class_342 implements com.cobblemon.mod.common.client.gui.CobblemonRenderable {
+  private long focusedTime;
+  private boolean showCursor;
+  private int startPosX;
+  public com.cobblemon.mod.common.client.gui.pc.TextWidget(int, int, int, int, int, net.minecraft.class_2561, kotlin.jvm.functions.Function0<kotlin.Unit>);
+  public com.cobblemon.mod.common.client.gui.pc.TextWidget(int, int, int, int, int, net.minecraft.class_2561, kotlin.jvm.functions.Function0, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public final long getFocusedTime();
+  public final void setFocusedTime(long);
+  public final boolean getShowCursor();
+  public final void setShowCursor(boolean);
+  public final int getStartPosX();
+  public final void setStartPosX(int);
+  public final net.minecraft.class_5250 applyTextCursor(java.lang.String, net.minecraft.class_5250);
+  public final void renderCursor(net.minecraft.class_332, net.minecraft.class_5250);
+  public void unfocused();
+  public void method_25365(boolean);
+  public boolean method_25402(double, double, int);
+  public boolean method_25404(int, int, int);
+  private static final void _init_$lambda$0(kotlin.jvm.functions.Function0, java.lang.String);
+}
+=== com/cobblemon/mod/common/client/gui/pc/WallpapersScrollingWidget$Companion.class
+Compiled from "WallpapersScrollingWidget.java"
+public final class com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget$Companion {
+  private com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget$Companion();
+  public final net.minecraft.class_2960 getPreviewOverlayResource();
+  public final net.minecraft.class_2960 getPreviewOverlayNewResource();
+  public final net.minecraft.class_2960 getBackgroundResource();
+  public com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+}
+=== com/cobblemon/mod/common/client/gui/pc/WallpapersScrollingWidget$WallpaperEntry.class
+Compiled from "WallpapersScrollingWidget.java"
+public final class com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget$WallpaperEntry extends com.cobblemon.mod.common.client.gui.ScrollingWidget$Slot<com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget$WallpaperEntry> {
+  private final net.minecraft.class_2960 wallpaper;
+  private net.minecraft.class_2960 altWallpaper;
+  private boolean isNew;
+  final com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget this$0;
+  public com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget$WallpaperEntry(net.minecraft.class_2960, net.minecraft.class_2960, boolean);
+  public final net.minecraft.class_2960 getWallpaper();
+  public final net.minecraft.class_2960 getAltWallpaper();
+  public final void setAltWallpaper(net.minecraft.class_2960);
+  public final boolean isNew();
+  public final void setNew(boolean);
+  public void method_25343(net.minecraft.class_332, int, int, int, int, int, int, int, boolean, float);
+  public boolean method_25402(double, double, int);
+  public net.minecraft.class_2561 method_37006();
+}
+=== com/cobblemon/mod/common/client/gui/pc/WallpapersScrollingWidget.class
+Compiled from "WallpapersScrollingWidget.java"
+public final class com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget extends com.cobblemon.mod.common.client.gui.ScrollingWidget<com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget$WallpaperEntry> {
+  public static final com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget$Companion Companion;
+  private final int pY;
+  private final com.cobblemon.mod.common.client.gui.pc.PCGUI pcGui;
+  private final com.cobblemon.mod.common.client.gui.pc.StorageWidget storageWidget;
+  public static final int WIDTH;
+  public static final int HEIGHT;
+  public static final int SLOT_WIDTH;
+  public static final int SLOT_HEIGHT;
+  public static final int SLOT_PADDING;
+  private static final net.minecraft.class_2960 previewOverlayResource;
+  private static final net.minecraft.class_2960 previewOverlayNewResource;
+  private static final net.minecraft.class_2960 backgroundResource;
+  public com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget(int, int, com.cobblemon.mod.common.client.gui.pc.PCGUI, com.cobblemon.mod.common.client.gui.pc.StorageWidget);
+  public final int getPY();
+  public final com.cobblemon.mod.common.client.gui.pc.PCGUI getPcGui();
+  public final com.cobblemon.mod.common.client.gui.pc.StorageWidget getStorageWidget();
+  protected int method_25329();
+  public void method_48579(net.minecraft.class_332, int, int, float);
+  private final void createEntries();
+  public int method_25342();
+  public int method_25322();
+  public int method_31383();
+  public static final net.minecraft.class_2960 access$getPreviewOverlayResource$cp();
+  public static final net.minecraft.class_2960 access$getPreviewOverlayNewResource$cp();
+  public static final net.minecraft.class_2960 access$getBackgroundResource$cp();
+  public static final net.minecraft.class_310 access$getMinecraft$p$s-1032132216(com.cobblemon.mod.common.client.gui.pc.WallpapersScrollingWidget);
+  static {};
+}
