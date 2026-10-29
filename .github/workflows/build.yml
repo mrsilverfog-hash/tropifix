@@ -45,19 +45,6 @@ jobs:
           fi
         shell: bash
 
-      - name: Inspecter le package pc (affiché dans le log)
-        if: always()
-        run: |
-          cd /tmp/pcgui 2>/dev/null || exit 0
-          for f in com/cobblemon/mod/common/client/gui/pc/*.class; do echo "=== $f"; javap -p "$f"; done > /tmp/pc-inspect.txt 2>&1
-          cd $GITHUB_WORKSPACE
-          git config user.name ci-log; git config user.email ci@log
-          git fetch -q origin || true
-          git worktree add -q --detach /tmp/insp HEAD
-          cd /tmp/insp && git checkout -q --orphan ci-inspect && git rm -rfq . > /dev/null 2>&1 || true
-          cp /tmp/pc-inspect.txt . && git add -f pc-inspect.txt && git commit -qm inspect && git push -qf origin ci-inspect || true
-        shell: bash
-
       - name: Pousser le log en cas d'echec
         if: failure()
         run: |
