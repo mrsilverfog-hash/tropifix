@@ -127,6 +127,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
 
     @Inject(method = "mouseClicked(DDI)Z", at = @At("HEAD"), cancellable = true)
     private void tropifix$onClick(double mx, double my, int button, CallbackInfoReturnable<Boolean> cir) {
+        tropifix$boxCache.clear();
         if (tropifix$confirming) {
             // Pendant la confirmation, seuls Oui / Non répondent
             if (tropifix$yesBtn.isMouseOver(mx, my) || tropifix$noBtn.isMouseOver(mx, my)) return;
@@ -153,6 +154,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
 
     @Inject(method = "mouseDragged(DDIDD)Z", at = @At("HEAD"), cancellable = true)
     private void tropifix$onDrag(double mx, double my, int button, double dx, double dy, CallbackInfoReturnable<Boolean> cir) {
+        tropifix$boxCache.clear();
         if (!tropifix$multi || !tropifix$dragging || this.storageWidget == null) return;
         if (tropifix$listMode() != 0) return;
         Object slot = tropifix$otherWidgetAt(mx, my) ? null : tropifix$slotAt(mx, my);
@@ -178,6 +180,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
 
     @Inject(method = "render(Lnet/minecraft/client/gui/DrawContext;IIF)V", at = @At("TAIL"))
     private void tropifix$onRender(DrawContext ctx, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        tropifix$boxCache.clear();
         // Fin du glissé quand le bouton gauche est relâché
         long window = MinecraftClient.getInstance().getWindow().getHandle();
         if (GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) != GLFW.GLFW_PRESS) tropifix$dragging = false;
@@ -289,6 +292,7 @@ public abstract class PcMultiReleaseMixin extends Screen {
     @Unique
     private void tropifix$releaseSelected() {
         tropifix$confirming = false;
+        tropifix$boxCache.clear();
         Map<Integer, Integer> perBox = new TreeMap<>();
         int count = 0;
         for (Map.Entry<Long, UUID> e : tropifix$selection.entrySet()) {
@@ -494,9 +498,20 @@ public abstract class PcMultiReleaseMixin extends Screen {
         return l == null ? 0 : l.size();
     }
 
+    /** Contenu des boîtes déjà lu pendant l'image ou le clic en cours (vidé à chaque image). */
+    @Unique private final Map<Integer, List<Pokemon>> tropifix$boxCache = new java.util.HashMap<>();
+
     /** Contenu réel de la boîte (données du PC côté client), null si illisible. */
     @Unique
     private List<Pokemon> tropifix$boxData(int box) {
+        if (tropifix$boxCache.containsKey(box)) return tropifix$boxCache.get(box);
+        List<Pokemon> data = tropifix$readBoxData(box);
+        tropifix$boxCache.put(box, data);
+        return data;
+    }
+
+    @Unique
+    private List<Pokemon> tropifix$readBoxData(int box) {
         try {
             List<?> l = tropifix$boxes();
             if (l == null || box < 0 || box >= l.size()) return null;
